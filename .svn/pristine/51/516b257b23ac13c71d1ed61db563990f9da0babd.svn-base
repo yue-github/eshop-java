@@ -1,0 +1,10 @@
+jdbcUrl=jdbc:mysql://47.99.205.170:3306/new_loyee_db?characterEncoding=utf8
+user=root
+password=bayou2009
+
+login_amount=5
+login_minutes=5
+login_hours=24
+
+
+

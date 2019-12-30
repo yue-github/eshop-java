@@ -1,0 +1,285 @@
+package com.eshop.promotion;
+
+import com.eshop.content.ResourceService;
+import com.eshop.log.Log;
+import com.eshop.model.Promotion;
+import com.eshop.model.PromotionKanjia;
+import com.eshop.model.Resource;
+import com.eshop.model.dao.BaseDao;
+import com.jfinal.plugin.activerecord.Db;
+import com.jfinal.plugin.activerecord.IAtom;
+import com.eshop.model.dao.BaseDao.ServiceCode;
+import com.jfinal.plugin.activerecord.Record;
+
+import java.sql.SQLException;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+public class Kanjia  extends BasePromotion {
+
+    /**
+     * 批量删除
+     * @param ids
+     * @return
+     */
+    public static ServiceCode delete(final List<Integer> ids) {
+        boolean success = Db.tx(new IAtom() {
+
+            @Override
+            public boolean run() throws SQLException {
+                try {
+                    for (Integer id : ids) {
+                        //删除扩展信息
+                        Db.update("delete from promotion_kanjia where promotion_id = ?", id);
+                        //删除基础信息
+                        Db.update("delete from promotion where id = ?", id);
+                    }
+                } catch (Exception e) {
+                    Log.error(e.getMessage() + ",删除活动失败");
+                    return false;
+                }
+                return true;
+            }
+        });
+
+        return success ? ServiceCode.Success : ServiceCode.Failed;
+    }
+    /**
+     * 删除砍价活动
+     * @param id
+     * @return
+     */
+    public static ServiceCode delete(final int id) {
+
+        boolean success = Db.tx(new IAtom() {
+
+            @Override
+            public boolean run() throws SQLException {
+                try {
+                    //删除扩展信息
+                    Db.update("delete from promotion_kanjia where promotion_id = ?", id);
+                    //删除基础信息
+                    Db.update("delete from promotion where id = ?", id);
+                } catch (Exception e) {
+                    Log.error(e.getMessage() + ",删除砍价活动失败");
+                    return false;
+                }
+                return true;
+            }
+        });
+
+        return success ? ServiceCode.Success : ServiceCode.Failed;
+    }
+    /**
+     * 查看砍价活动详情
+     * @param promotionId
+     * @return
+     */
+    public static PromotionKanjia getPromotionKanjia(Integer id){
+
+        return PromotionKanjia.dao.findFirst("select * from promotion_kanjia where promotion_id = ?", id);
+    }
+
+    public static ServiceCode create(final Promotion promotion,final PromotionKanjia promotionKanjia,
+                                     final String mainPic,final Integer full,final Integer favourable){
+
+        boolean success = Db.tx(new IAtom(){
+
+            @Override
+            public boolean run() throws SQLException {
+
+                try {
+                    promotion.setCreatedAt(new Date());
+                    promotion.setUpdatedAt(new Date());
+                    promotion.save();
+
+                    promotionKanjia.setPromotionId(promotion.getId());
+                    promotionKanjia.setSum(full);
+                    promotionKanjia.setFavourable(favourable);
+                    promotionKanjia.save();
+
+                    if(mainPic != null && mainPic.length() > 0){
+                        Integer resId = ResourceService.insertResource(mainPic, promotion.getId(),
+                                ResourceService.PROMOTION, ResourceService.PICTURE);
+                        promotion.setMainPic(resId);
+                        promotion.update();
+                    }
+                }catch (Exception e){
+                    Log.error(e.getMessage() + ",创建砍价活动失败");
+                    e.printStackTrace();
+                    return false;
+
+                }
+                return true;
+            }
+        });
+
+        return success ? ServiceCode.Success : ServiceCode.Failed;
+    }
+
+    /**
+     *
+     * 修改砍价活动
+     * @param promotion
+     * @param promotionKanjia
+     * @param mainPic
+     * @return
+     */
+    public static ServiceCode update(final Promotion promotion,final PromotionKanjia promotionKanjia,
+                                     final String mainPic){
+
+        boolean success = Db.tx(new IAtom() {
+
+            @Override
+            public boolean run() throws SQLException {
+                try {
+                    promotionKanjia.update();
+                    promotion.update();
+
+                    if(mainPic != null && mainPic.length() > 0) {
+                        Resource res = null;
+
+                        if(promotion.getMainPic() != null) {
+                            res = ResourceService.get(promotion.getMainPic());
+                        }
+
+                        // 已存在{
+                        if (res != null) {
+
+                            res.setPath(mainPic);
+
+                            res.update();
+                        } else {	// 不存在
+                            int resId = ResourceService.insertResource(mainPic, promotion.getId(), ResourceService.PROMOTION, ResourceService.PICTURE);
+                            promotion.setMainPic(resId);
+                            promotion.update();
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.error(e.getMessage() + ",修改砍价活动失败");
+                    return false;
+                }
+                return true;
+            }
+        });
+
+        return success ? ServiceCode.Success : ServiceCode.Failed;
+    }
+
+    /**
+     * 批量查询砍价活动
+     * @param offset
+     * @param count
+     * @param title
+     * @param desc
+     * @param startDate
+     * @param endDate
+     * @param startCreatedAt
+     * @param endCreatedAt
+     * @param scope
+     * @param baseOn
+     * @param shopId
+     * @param minFull
+     * @param maxFull
+     * @return
+     */
+    public static List<Record> findPromotionItems(int offset, int count, String title, String desc,
+                                                  String startDate, String endDate, String startCreatedAt,
+                                                  String endCreatedAt, Integer scope,Integer baseOn, Integer shopId,
+                                                  Double minFull, Double maxFull, Map<String, String> orderByMap){
+        String sql = findPromotionSql(title, desc, startDate, endDate, startCreatedAt, endCreatedAt,
+                scope, baseOn, shopId, minFull, maxFull, orderByMap);
+        sql = BaseDao.appendLimitSql(sql, offset, count);
+        return  Db.find(sql);
+    }
+    /**
+     * 统计批量
+     * @param offset
+     * @param count
+     * @param title
+     * @param desc
+     * @param startDate
+     * @param endDate
+     * @param startCreatedAt
+     * @param endCreatedAt
+     * @param scope
+     * @param baseOn
+     * @param shopId
+     * @param minFull
+     * @param maxFull
+     * @return
+     */
+    public static int countPromotionItems(int offset, int count, String title, String desc,
+                                          String startDate, String endDate, String startCreatedAt,
+                                          String endCreatedAt, Integer scope,Integer baseOn, Integer shopId,
+                                          Double minFull, Double maxFull, Map<String, String> orderByMap){
+
+        String sql = findPromotionSql(title, desc, startDate, endDate, startCreatedAt, endCreatedAt,
+                scope, baseOn, shopId, minFull, maxFull, orderByMap);
+        return Db.find(sql).size();
+    }
+
+    /**
+     * 组装sql语句
+     * @param title
+     * @param desc
+     * @param startDate
+     * @param endDate
+     * @param startCreatedAt
+     * @param endCreatedAt
+     * @param scope
+     * @param baseOn
+     * @param shopId
+     * @param minFull
+     * @param maxFull
+     * @return
+     */
+    public static String findPromotionSql(String title, String desc,String startDate, String endDate,
+                                          String startCreatedAt, String endCreatedAt, Integer scope,
+                                          Integer baseOn, Integer shopId, Double minFull,
+                                          Double maxFull, Map<String, String> orderByMap){
+
+        String sql = "select a.*, b.sum from promotion as a" +
+                " left join promotion_kanjia as b on a.id = b.promotion_id" +
+                " where a.type = " + 8;
+
+        if (title != null && !title.equals("")) {
+            sql += " and a.title like '%" + title + "%'";
+        }
+        if (desc != null && !desc.equals("")) {
+            sql += " and a.desc like '%" + desc + "%'";
+        }
+        if (startDate != null && !startDate.equals("")) {
+            sql += " and DATE_FORMAT(a.startDate, '%Y-%m-%d') <= '" + startDate + "'";
+        }
+        if (endDate != null && !endDate.equals("")) {
+            sql += " and DATE_FORMAT(a.endDate, '%Y-%m-%d') >= '" + endDate + "'";
+        }
+        if (startCreatedAt != null && !startCreatedAt.equals("")) {
+            sql += " and DATE_FORMAT(a.created_at, '%Y-%m-%d') >= '" + startCreatedAt + "'";
+        }
+        if (endCreatedAt != null && !endCreatedAt.equals("")) {
+            sql += "and DATE_FORMAT(a.created_at, '%Y-%m-%d') <= '" + endCreatedAt + "'";
+        }
+        if (scope != null) {
+            sql += " and a.scope = " + scope;
+        }
+        if (baseOn != null) {
+            sql += " and a.baseOn = " + baseOn;
+        }
+        if (shopId != null) {
+            sql += " and a.shop_id = " + shopId;
+        }
+        if (minFull != null) {
+            sql += " and b.sum >= " + minFull;
+        }
+        if (maxFull != null) {
+            sql += " and b.sum <= " + maxFull;
+        }
+        sql += BaseDao.getOrderSql(orderByMap);
+
+        return sql;
+    }
+}

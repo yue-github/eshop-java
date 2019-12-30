@@ -1,0 +1,561 @@
+package com.eshop.controller.pc;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.math.BigDecimal;
+import java.util.*;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.eshop.coupon.CashCouponService;
+import com.eshop.coupon.CouponService;
+import com.eshop.coupon.DiscountCouponService;
+import com.eshop.helper.AlipayHelper;
+import com.eshop.helper.CacheHelper;
+import com.eshop.helper.MathHelper;
+import com.eshop.helper.UnionpayHelper;
+import com.eshop.helper.WxPayPCHelper;
+import com.eshop.interceptor.CustomerPcAuthInterceptor;
+import com.eshop.logistics.CustomerAddress;
+import com.eshop.logistics.Logistics;
+import com.eshop.model.Address;
+import com.eshop.model.Coupon;
+import com.eshop.model.Customer;
+import com.eshop.model.Order;
+import com.eshop.model.Product;
+import com.eshop.model.dao.BaseDao;
+import com.eshop.model.dao.BaseDao.ServiceCode;
+import com.eshop.promotion.BasePromotion;
+import com.eshop.service.Member;
+import com.eshop.service.User;
+import com.jfinal.aop.Before;
+import com.jfinal.kit.Prop;
+import com.jfinal.kit.PropKit;
+import com.jfinal.plugin.activerecord.Record;
+
+/**
+ * 确认订单控制器
+ * @author TangYiFeng
+ */
+public class ComfirmOrderController extends PcBaseController {
+
+	Logistics logistics;
+	DiscountCouponService discountCouponService;
+	CashCouponService cashCouponService;
+	Prop p;
+	Member member;
+	
+    /**
+     * Default constructor
+     */
+    public ComfirmOrderController() {
+    	logistics = new Logistics();
+    	discountCouponService = new DiscountCouponService();
+    	cashCouponService = new CashCouponService();
+    	p = PropKit.use("callBackUrl.txt");
+    	member = new Member();
+    }
+
+    /**
+     * 获取我的默认地址
+     * @param address_id 地址id
+     * @param token 帐户访问口令（必填）
+     * @return 成功：{error: 0, address: {id: 地址id, contacts: 姓名, phone: 手机号, isDefault: 是否默认地址(true, false), province: 省, city: 市, district: 区, detailedAddress: 详细地址}}；失败：{error: >0, errmsg: 错误信息}
+     */
+    @Before(CustomerPcAuthInterceptor.class)
+    public void defaultAddress() {
+    	String token = getPara("token");
+    	Customer customer = (Customer)CacheHelper.get(token);
+    	int customerId = customer.getId();
+    	Address address = CustomerAddress.getDefaultAddress(customerId);
+    	
+    	jsonObject.put("address", address);
+    	renderJson(jsonObject);
+    }
+    
+    /**
+     * 获取直接购买产品信息
+     * @param token
+     * @param id 产品id（必填）
+     * @param amount 数量（必填）
+     * @param priceId 价格id（必填）
+     * @return 成功：{error: 0,data:{allPrice:总金额(包含运费), totalAmount:总购买数量, shopList:[{shop_id:店铺id,shopName:店铺名称,shopLogo:店铺logo,deliveryPrice:运费, productList:[{product_id:产品id,productName:产品名称,mainPic:产品主图,selectProterties:所选属性,amount:购买数量,suggestedRetailUnitPrice:产品单价,totalPrice:产品总价},...]}]}}；失败：{error: >0, errmsg: 错误信息}
+     */
+    public void productInfo() {
+    	String[] params = {"id", "priceId", "amount"};
+		if (!this.validate(params)) {
+			return;
+		}
+		
+    	int id = getParaToInt("id");
+    	int priceId = getParaToInt("priceId");
+    	int amount = getParaToInt("amount");
+    	String startAt = getPara("startAt");
+    	String endAt = getPara("endAt");
+    	
+    	int addressId = 0;
+    	if (getPara("address_id") != null && !getPara("address_id").equals("")) {
+    		addressId = getParaToInt("address_id");
+    	}
+    	Record other = new Record();
+    	other.set("address_id", addressId);
+    	
+    	List<Record> list = Member.deliveryOrdersByDirect(id, priceId, amount, startAt, endAt, addressId);
+    	List<Record> products = Member.getProductsByDirect(id, priceId, amount, startAt, endAt);
+    	double totalProdPrice = Member.calculateProductTotalPayable(products);
+    	double totalAmount = Member.calculateProductTotalAmount(products);
+    	double totalPromDiscount = BasePromotion.calculateDiscount(products);
+    	double totalCouponDiscount = 0;
+    	double deliveryPrice = logistics.calculateDeliveryPrice(list, other);
+    	double totalPayable = totalProdPrice + deliveryPrice - totalPromDiscount - totalCouponDiscount;
+    	
+    	jsonObject.put("data", list);
+    	jsonObject.put("totalProdPrice", totalProdPrice);
+    	jsonObject.put("totalAmount", totalAmount);
+    	jsonObject.put("totalPromDiscount", totalPromDiscount);
+    	jsonObject.put("totalCouponDiscount", totalCouponDiscount);
+    	jsonObject.put("deliveryPrice", deliveryPrice);
+    	jsonObject.put("totalPayable", totalPayable);//应付金额
+    	renderJson(jsonObject);
+    }
+
+    /**
+     * 提交订单-购物车
+     * @param token 帐户访问口令（必填）
+     * @param address_id
+     * @param source
+     * @param payType
+     * @param couponId 选填
+     * @param invoice:{type:发票类型(1普通发票,2电子发票,3增值税发票),invoiceHead:发票抬头,invoiceContent:发票内容}
+     * @return 成功：{error: 0,error:-1(余额不足),error:-2(订单为空，不能提交),payType:支付类型(1微信,2支付宝),payInfo:支付信息}；失败：{error: >0, errmsg: 错误信息}
+     */
+    @Before(CustomerPcAuthInterceptor.class)
+    public void saveOrderByCart() {
+    	String[] params = {"address_id", "source", "payType"};
+    	if (!this.validate(params)) {
+    		return;
+    	}
+    	
+    	int addressId = getParaToInt("address_id");
+    	int source = getParaToInt("source");
+    	int payType = getParaToInt("payType");
+    	int couponId = 0;
+    	int gold = 0;
+    	if (getPara("couponId") != null && !getPara("couponId").equals("")) {
+    		couponId = getParaToInt("couponId");
+    	}
+    	
+    	if (getPara("MyTgold") != null && !getPara("MyTgold").equals("")) {
+    		gold = getParaToInt("MyTgold");
+    	}
+    	
+    	int address_type = getPara("address_type") != null && !getPara("address_type").equals("") ? getParaToInt("address_type") : 1;
+    	Record other = new Record();
+    	other.set("address_id", addressId);
+    	other.set("source", source);
+    	other.set("payType", payType);
+    	other.set("couponId", couponId);
+    	other.set("order_type", 0);
+    	other.set("note", getPara("note"));
+    	other.set("address_type", address_type);
+    	other.set("contacts", getPara("contacts"));
+    	other.set("phone", getPara("phone"));
+    	other.set("gold", gold);
+    	
+    	if (getPara("invoice") != null) {
+    		String invoiceStr = getPara("invoice");
+    		JSONObject object = JSON.parseObject(invoiceStr);
+    		
+    		Record invoice = new Record();
+    		invoice.set("type", object.getInteger("type"));
+    		invoice.set("invoiceHead", object.getString("invoiceHead"));
+    		invoice.set("invoiceContent", object.getInteger("invoiceContent"));
+    		
+    		other.set("invoice", invoice);
+    	}
+    	
+    	String token = getPara("token");
+    	Customer customer = (Customer)CacheHelper.get(token);
+    	int customerId = customer.getId();
+    	
+    	String theSameOrderNum = member.submitOrderWithShoppingCart(customerId, other);
+    	
+    	if (theSameOrderNum == null) {
+    		returnError(ErrorCode.Exception, "提交订单失败");
+    		return;
+    	}
+    	
+    	double totalPay = Member.calculateOrderPayable(theSameOrderNum);
+    	totalPay = MathHelper.cutDecimal(totalPay);
+    	int totalPayInt = (int) new BigDecimal(totalPay + "").multiply(new BigDecimal(100 + "")).doubleValue();
+    	
+    	String payInfo = "";
+    	if (payType == 1) {   //微信支付
+    		payInfo = WxPayPCHelper.wxpay("乐驿", theSameOrderNum, totalPayInt + "", this.getRequest());
+    		payInfo = p.get("apiHostName") + "/" + payInfo;
+    		
+    	} else if (payType == 2) {  //支付宝支付
+    		payInfo = AlipayHelper.getUrl(theSameOrderNum, "乐驿商城", totalPay + "", "");
+    		
+    	} else if (payType == 3) {  //银联支付
+    		payInfo = UnionpayHelper.getHtml(totalPayInt + "", theSameOrderNum);
+    		
+    	} else if (payType == 4) {  //余额支付
+    		
+    		this.returnError(-1, "非法操作");
+    	}
+    	
+    	jsonObject.put("theSameOrderNum", theSameOrderNum);
+    	jsonObject.put("orderCode", "");
+    	jsonObject.put("orderId", 0);
+    	jsonObject.put("payType", payType);
+    	jsonObject.put("payInfo", payInfo);
+    	renderJson(jsonObject);
+    }
+    
+    /**
+     * 提交订单-直接购物
+     * @param token 帐户访问口令（必填）
+     * @param address_id
+     * @param source
+     * @param payType
+     * @param couponId
+     * @param productId
+     * @param priceId
+     * @param amount
+     * @return 成功：{error: 0,data:{payType:支付类型(1微信,2支付宝),payInfo:支付信息}}；失败：{error: >0, errmsg: 错误信息}
+     */
+    @Before(CustomerPcAuthInterceptor.class)
+    public void saveOrder() {
+    	String[] params = {"address_id", "source", "payType", "id", "priceId", "amount"};
+    	if (!this.validate(params)) {
+    		return;
+    	}
+    	int addressId = getParaToInt("address_id");
+    	int source = getParaToInt("source");
+    	int payType = getParaToInt("payType");
+    	int productId = getParaToInt("id");
+    	int priceId = getParaToInt("priceId");
+    	int amount = getParaToInt("amount");
+    	int gold = 0;
+    	String startAt = getPara("startAt");
+    	String endAt = getPara("endAt");
+    	int couponId = 0;
+    	if (getPara("couponId") != null && !getPara("couponId").equals("")) {
+    		couponId = getParaToInt("couponId");
+    	}
+    	if (getPara("MyTgold") != null && !getPara("MyTgold").equals("")) {
+    		gold = getParaToInt("MyTgold");
+    	}
+    	
+    	Product product = Product.dao.findById(productId);
+    	int address_type = getPara("address_type") != null && !getPara("address_type").equals("") ? getParaToInt("address_type") : 1;
+    	Record other = new Record();
+    	other.set("address_id", addressId);
+    	other.set("source", source);
+    	other.set("payType", payType);
+    	other.set("couponId", couponId);
+    	other.set("order_type", product.getProdType());
+    	other.set("note", getPara("note"));
+    	other.set("address_type", address_type);
+    	other.set("contacts", getPara("contacts"));
+    	other.set("phone", getPara("phone"));
+    	other.set("gold", gold);
+    	if (getPara("invoice") != null) {
+    		String invoiceStr = getPara("invoice");
+    		JSONObject object = JSON.parseObject(invoiceStr);
+    		
+    		Record invoice = new Record();
+    		invoice.set("type", object.getInteger("type"));
+    		invoice.set("invoiceHead", object.getString("invoiceHead"));
+    		invoice.set("invoiceContent", object.getInteger("invoiceContent"));
+
+    		other.set("invoice", invoice);
+    	}
+    	String token = getPara("token");
+    	Customer customer = (Customer)CacheHelper.get(token);
+    	int customerId = customer.getId();
+    	String theSameOrderNum = member.submitOrderWithProduct(customerId, productId, priceId, amount, other, startAt, endAt);
+    	
+    	if (theSameOrderNum == null) {
+    		returnError(ErrorCode.Exception, "提交订单失败");
+    		return;
+    	}
+		//totalPayable 应付金额
+		//double totalPay = Member.calculateOrderPayable(theSameOrderNum);
+		//double totalPay = totalPayable;
+		//totalPay = MathHelper.cutDecimal(totalPay);
+		//int totalPayInt = (int) new BigDecimal(totalPay + "").multiply(new BigDecimal(100 + "")).doubleValue();
+
+		double totalPayable = getParaToDoubleDefault("totalPayable");
+		totalPayable = MathHelper.cutDecimal(totalPayable);
+		int totalPayInt = (int) new BigDecimal(totalPayable + "").multiply(new BigDecimal(100 + "")).doubleValue();
+
+    	String payInfo = "";
+    	if (payType == 1) {   //微信支付
+    		payInfo = WxPayPCHelper.wxpay("乐驿商城", theSameOrderNum + "", totalPayInt + "", this.getRequest());
+    		String path = p.get("apiHostName") + "/";
+    		payInfo = path + payInfo;
+
+    	} else if (payType == 2) {  //支付宝支付
+    		payInfo = AlipayHelper.getUrl(theSameOrderNum + "", "乐驿商城", totalPayable + "", "");
+
+    	} else if (payType == 3) {  //银联支付
+    		payInfo = UnionpayHelper.getHtml(totalPayInt + "", theSameOrderNum + "");
+
+    	} else if (payType == 4) {
+    		this.returnError(-1, "非法操作");
+    	}
+
+    	jsonObject.put("theSameOrderNum", theSameOrderNum);
+    	jsonObject.put("orderCcode", "");
+    	jsonObject.put("orderId", 0);
+    	jsonObject.put("payType", payType);
+    	jsonObject.put("payInfo", payInfo);
+    	renderJson(jsonObject);
+    }
+    
+    /**
+     * 支付订单
+     * @param token
+     * @param orderId
+     * @return 成功：{error: 0,error:-1(余额不足),data:{payType:支付类型(1微信,2支付宝),payInfo:支付信息}}；失败：{error: >0, errmsg: 错误信息}
+     */
+    public void payOrder() {
+    	if (!this.validateRequiredString("orderId")) {
+    		return;
+    	}
+    	int orderId = getParaToInt("orderId");
+    	
+    	Order order = User.getOrder(orderId);
+    	
+    	if (order == null) {
+    		returnError(ErrorCode.Exception, "支付失败");
+    	}
+    	
+    	order.setCodeType(2);
+    	order.setOrderCode(order.getOrderCode()+"1");
+    	order.update();
+    	
+    	int payType = order.getPayType();
+    	double totalPay = order.getTotalPayable().doubleValue();
+    	String tradeCode = order.getOrderCode();
+    	totalPay = MathHelper.cutDecimal(totalPay);
+    	int totalPayInt = (int) (totalPay * 100);
+    	
+    	String payInfo = "";
+    	
+    	if (payType == 1) {   //微信支付
+    		payInfo = WxPayPCHelper.wxpay("乐驿商城", tradeCode, totalPayInt + "", this.getRequest());
+    		
+    		String path = this.getBaseUrl();
+    		if (path.indexOf("eebin.com") != -1) {
+    			path = this.getHostName() + "/";
+    		}
+    		
+    		payInfo = path + payInfo;
+    		
+    	} else if (payType == 2) {  //支付宝支付
+    		payInfo = AlipayHelper.getUrl(tradeCode, "乐驿商城", totalPay + "", "");
+    		
+    	} else if (payType == 3) {  //银联支付
+    		payInfo = UnionpayHelper.getHtml(totalPayInt + "", tradeCode);
+    		
+    	} else if (payType == 4) {  //余额支付
+    		this.returnError(-1, "非法操作");
+    	}
+    	
+    	jsonObject.put("orderId", order.getId());
+    	jsonObject.put("codeType", order.getCodeType());
+    	jsonObject.put("theSameOrderNum", order.getTheSameOrderNum());
+    	jsonObject.put("payType", payType);
+    	jsonObject.put("payInfo", payInfo);
+    	renderJson(jsonObject);
+    }
+    
+    /**
+	 * 计算优惠券优惠金额  - 购物车购买
+	 * @param couponId
+	 * @return 成功：{error:0,discount:优惠金额} 失败：{error:>0,errmsg:错误信息}
+	 */
+	public void couponDiscount() {
+		if (!this.validateRequiredString("couponId")) {
+			return;
+		}
+		int couponId = getParaToInt("couponId");
+		
+		String token = getPara("token");
+		Customer customer = (Customer) CacheHelper.get(token);
+		int customerId = customer.getId();
+		
+		List<Record> list = Member.getShoppingCartProducts(customerId, null, 1);
+		
+		double discount = 0;
+		Coupon coupon = CouponService.getCoupon(couponId);
+		
+		if (coupon.getType() == CouponService.COUPON_DISCOUNT) {
+			discount = discountCouponService.calculateDiscount(couponId, list);
+		} else if (coupon.getType() == CouponService.COUPON_CASH) {
+			discount = cashCouponService.calculateDiscount(couponId, list);
+		}
+		
+		jsonObject.put("discount", discount);
+		renderJson(jsonObject);
+	}
+	
+	/**
+	 * 计算优惠券优惠金额  - 直接购买
+	 * @param couponId
+	 * @param product_id
+	 * @param price_id
+	 * @param amount
+	 * @return 成功：{error:0,discount:优惠金额} 失败：{error:>0,errmsg:错误信息}
+	 */
+	public void couponDiscount2() {
+		String[] params = {"couponId", "product_id", "price_id", "amount"};
+		if (!this.validate(params)) {
+			return;
+		}
+		
+		int couponId = getParaToInt("couponId");
+		int productId = getParaToInt("product_id");
+		int priceId = getParaToInt("price_id");
+		int amount = getParaToInt("amount");
+		String startAt = getPara("startAt");
+		String endAt = getPara("endAt");
+		
+		List<Record> list = Member.getProductsByDirect(productId, priceId, amount, startAt, endAt);
+		
+		double discount = 0;
+		Coupon coupon = CouponService.getCoupon(couponId);
+		
+		if (coupon.getType() == CouponService.COUPON_DISCOUNT) {
+			discount = discountCouponService.calculateDiscount(couponId, list);
+		} else if (coupon.getType() == CouponService.COUPON_CASH) {
+			discount = cashCouponService.calculateDiscount(couponId, list);
+		}
+		
+		jsonObject.put("discount", discount);
+		renderJson(jsonObject);
+	}
+
+	/**
+	 * 某个订单是否已付款成功，购物车提交订单时使用
+	 * @param theSameOrderNum
+	 * @return 成功 {error:0,data:true(已付款),false(还未付款)} 失败 {error:>0,errmsg:错误信息}
+	 */
+	public void isPayByTheSameOrderNum() {
+		if (!this.validateRequiredString("theSameOrderNum")) {
+			return;
+		}
+		String theSameOrderNum = getPara("theSameOrderNum");
+		
+		Order order = Member.getOrder(theSameOrderNum);
+		int status = order.getStatus();
+		
+		boolean data = false;
+		
+		if (status == BaseDao.PAYED) {
+			data = true;
+		}
+		
+		jsonObject.put("data", data);
+		renderJson(jsonObject);
+	}
+	
+	/**
+	 * 是否支付成功
+	 */
+	public void isPayByOrderId() {
+		if (!this.validateRequiredString("orderId")) {
+			return;
+		}
+		int orderId = getParaToInt("orderId");
+		
+		Order order = User.getOrder(orderId);
+		int status = order.getStatus();
+		boolean data = false;
+		
+		if (status == BaseDao.PAYED) {
+			data = true;
+		}
+		
+		jsonObject.put("data", data);
+		renderJson(jsonObject);
+	}
+	
+	/**
+	 * 微信支付回调 -theSameOrderNum
+	 * @throws IOException
+	 */
+	public void wxpayCallback() throws IOException {
+		HttpServletRequest request  = this.getRequest();
+        InputStream inputStream;  
+        StringBuffer sb = new StringBuffer();  
+        inputStream = request.getInputStream();  
+        String s ;  
+        BufferedReader in = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));  
+        
+        while ((s = in.readLine()) != null){  
+            sb.append(s);  
+        } 
+        
+        in.close();  
+        inputStream.close();  
+    	
+    	String data = sb.toString();
+    	
+    	String return_code = "FAIL";
+    	
+        if(WxPayPCHelper.wxPcPayCallback(data) == ServiceCode.Success) {
+        	return_code = "SUCCESS";
+        
+        }
+        
+        jsonObject.put("return_code", return_code);
+        renderJson(jsonObject);
+	}
+	
+	/**
+	 * 支付宝支付异步回调地址
+	 * @throws IOException 
+	 */
+	public void alipayCallBack() throws IOException {
+		HttpServletRequest request = this.getRequest();
+		HttpServletResponse response = this.getResponse();
+		PrintWriter out = response.getWriter();
+		
+		boolean isSuccess = AlipayHelper.alipayCallBack(request, response);
+		
+		if (!isSuccess) {
+			out.print("fail");
+		}
+		
+		out.print("success");
+	}
+	
+	/**
+	 * 银联支付回调
+	 * @throws IOException
+	 */
+	public void unionpayCallback() {
+		try {
+			UnionpayHelper.backRcvResponse(this.getRequest(), this.getResponse());
+			renderText("ok");
+		} catch (ServletException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+}

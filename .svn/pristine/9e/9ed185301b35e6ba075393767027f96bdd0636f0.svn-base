@@ -1,0 +1,814 @@
+package com.eshop.controller.pc;
+
+import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.eshop.coupon.CashCouponService;
+import com.eshop.coupon.CouponProductService;
+import com.eshop.coupon.CouponService;
+import com.eshop.coupon.CustomerCouponService;
+import com.eshop.coupon.DiscountCouponService;
+import com.eshop.helper.CacheHelper;
+import com.eshop.helper.DateHelper;
+import com.eshop.interceptor.CustomerPcAuthInterceptor;
+import com.eshop.model.Coupon;
+import com.eshop.model.CouponProduct;
+import com.eshop.model.Customer;
+import com.eshop.model.Product;
+import com.eshop.model.dao.BaseDao.ServiceCode;
+import com.eshop.service.Member;import com.jfinal.aop.Before;
+import com.jfinal.plugin.activerecord.Db;
+import com.jfinal.plugin.activerecord.Page;
+import com.jfinal.plugin.activerecord.Record;
+import com.mysql.jdbc.CacheAdapter;
+
+public class CouponController extends PcBaseController {
+	
+	private CashCouponService cashCouponService;
+	private DiscountCouponService discountCouponService;
+	
+	/**
+	 * 创建优惠券
+	 * @param token
+	 * @param title
+	 * @param startDate
+	 * @param endDate
+	 * @param baseOn
+	 * @param scope
+	 * @param type
+	 * @param full
+	 * @param value
+	 * @param description
+	 * @param amount
+	 */
+	@Before(CustomerPcAuthInterceptor.class)
+	public void createCoupon() {
+		String[] params = {"title", "startDate", "endDate", "baseOn", "scope", "type", 
+				"full", "value", "amount"};
+		
+		if (!validate(params)) {
+			return;
+		}
+		
+		String title = getPara("title");
+		Date startDate = getParaToDate("startDate");
+		Date endDate = getParaToDate("endDate");
+		int baseOn = getParaToInt("baseOn");
+		int scope = getParaToInt("scope");
+		int type = getParaToInt("type");
+		BigDecimal full = getParaToDecimal("full");
+		BigDecimal value = getParaToDecimal("value");
+		String description = getPara("description");
+		int amount = getParaToInt("amount");
+		
+		String token = getPara("token");
+		Customer customer = (Customer) CacheHelper.get(token);
+		int shopId = customer.getShopId();
+		
+		Coupon model = new Coupon();
+		model.setTitle(title);
+		model.setStartDate(startDate);
+		model.setEndDate(endDate);
+		model.setBaseOn(baseOn);
+		model.setScope(scope);
+		model.setType(type);
+		model.setFull(full);
+		model.setValue(value);
+		model.setDescription(description);
+		model.setAmount(amount);
+		model.setShopId(shopId);
+		ServiceCode code = CouponService.createCoupon(model);
+		
+		if (code != ServiceCode.Success) {
+			setError(ErrorCode.Exception, "创建优惠券失败");
+		}
+		
+		renderJson(jsonObject);
+	}
+	
+	/**
+	 * 修改优惠券
+	 * @param token
+	 * @param id
+	 * @param title
+	 * @param startDate
+	 * @param endDate
+	 * @param baseOn
+	 * @param scope
+	 * @param type
+	 * @param full
+	 * @param value
+	 * @param description
+	 * @param amount
+	 */
+	@Before(CustomerPcAuthInterceptor.class)
+	public void updateCoupon() {
+		String[] params = {"id", "title", "startDate", "endDate", "baseOn", "scope", "type", 
+				"full", "value", "amount"};
+		
+		if (!validate(params)) {
+			return;
+		}
+		
+		int id = getParaToInt("id");
+		String title = getPara("title");
+		Date startDate = getParaToDate("startDate");
+		Date endDate = getParaToDate("endDate");
+		int baseOn = getParaToInt("baseOn");
+		int scope = getParaToInt("scope");
+		int type = getParaToInt("type");
+		BigDecimal full = getParaToDecimal("full");
+		BigDecimal value = getParaToDecimal("value");
+		String description = getPara("description");
+		int amount = getParaToInt("amount");
+		
+		Coupon model = CouponService.getCoupon(id);
+		model.setTitle(title);
+		model.setStartDate(startDate);
+		model.setEndDate(endDate);
+		model.setBaseOn(baseOn);
+		model.setScope(scope);
+		model.setType(type);
+		model.setFull(full);
+		model.setValue(value);
+		model.setDescription(description);
+		model.setAmount(amount);
+		
+		ServiceCode code = CouponService.updateCoupon(model);
+		
+		if (code != ServiceCode.Success) {
+			setError(ErrorCode.Exception, "修改优惠券失败");
+		}
+		
+		renderJson(jsonObject);
+	}
+	
+	/**
+	 * 查看优惠券详情
+	 * @param token
+	 * @param id
+	 * @param 成功：{error:0, data:{}} 失败：{error:>0, errmsg:错误信息}
+	 */
+	@Before(CustomerPcAuthInterceptor.class)
+	public void getCoupon() {
+		String[] params = {"id"};
+		
+		if (!validate(params)) {
+			return;
+		}
+		
+		int id = getParaToInt("id");
+		Coupon copuon = CouponService.getCoupon(id);
+		
+		jsonObject.put("coupon", copuon);
+		renderJson(jsonObject);
+	}
+	
+	/**
+	 * 删除优惠券
+	 * @param token
+	 * @param id
+	 */
+	@Before(CustomerPcAuthInterceptor.class)
+	public void deleteCoupon() {
+		String[] params = {"id"};
+		
+		if (!validate(params)) {
+			return;
+		}
+		
+		int id = getParaToInt("id");
+		ServiceCode code = CouponService.deleteCoupon(id);
+		
+		if (code != ServiceCode.Success) {
+			setError(ErrorCode.Exception, "删除失败");
+		}
+		
+		renderJson(jsonObject);
+	}
+	
+	/**
+	 * 批量查询优惠券
+	 * @param token
+	 * @param offset
+	 * @param length
+	 * @param startCreatedAt
+	 * @param endCreatedAt
+	 * @param title
+	 * @param startDate
+	 * @param endDate
+	 * @param baseOn
+	 * @param scope
+	 * @param type
+	 * @param description
+	 */
+	@Before(CustomerPcAuthInterceptor.class)
+	public void findCoupons() {
+		String[] params = {"offset", "length"};
+		
+		if (!validate(params)) {
+			return;
+		}
+		
+		int offset = getParaToInt("offset");
+		int length = getParaToInt("length");
+		
+		String startCreatedAt = (getPara("startCreatedAt") != null) ? DateHelper.formatDateTime(getParaToDate("startCreatedAt")) : null;
+		String endCreatedAt = (getPara("endCreatedAt") != null) ? DateHelper.formatDateTime(getParaToDate("endCreatedAt")) : null;
+		String title = getPara("title");
+		String startDate = (getPara("startDate") != null) ? DateHelper.formatDateTime(getParaToDate("startDate")) : null;
+		String endDate = (getPara("endDate") != null) ? DateHelper.formatDateTime(getParaToDate("endDate")) : null;
+		Integer baseOn = (getPara("baseOn") != null) ? getParaToInt("baseOn") : null;
+		Integer scope = (getPara("scope") != null) ? getParaToInt("scope") : null;
+		Integer type = (getPara("type") != null) ? getParaToInt("type") : null;
+		String description = getPara("description");
+		
+		String token = getPara("token");
+		Customer customer = (Customer) CacheHelper.get(token);
+		int shopId = customer.getShopId();
+		
+		List<Record> list = CouponService.findCouponItems(offset, length, startCreatedAt, endCreatedAt, title, startDate, endDate, baseOn, scope, type, null, null, null, null, shopId, description, null, null, null);
+		int total = CouponService.countCouponItems(startCreatedAt, endCreatedAt, title, startDate, endDate, baseOn, scope, type, null, null, null, null, shopId, description, null, null, null);
+		
+		jsonObject.put("coupons", list);
+		jsonObject.put("offset", offset);
+		jsonObject.put("length", length);
+		jsonObject.put("totalRow", total);
+		renderJson(jsonObject);
+	}
+
+	/**
+	 * 创建优惠券产品
+	 * @param token
+	 * @param couponId
+	 * @param type
+	 * @param objectId
+	 */
+	@Before(CustomerPcAuthInterceptor.class)
+	public void createCouponProduct() {
+		String[] params = {"couponId", "type", "objectId"};
+		
+		if (!validate(params)) {
+			return;
+		}
+		
+		int couponId = getParaToInt("couponId");
+		int type = getParaToInt("type");
+		int objectId = getParaToInt("objectId");
+		
+		CouponProduct model = new CouponProduct();
+		model.setCouponId(couponId);
+		model.setType(type);
+		model.setObjectId(objectId);
+		
+		ServiceCode code = CouponProductService.createCouponProduct(model);
+		
+		if (code != ServiceCode.Success) {
+			setError(ErrorCode.Exception, "创建失败");
+		}
+		
+		renderJson(jsonObject);
+	}
+	
+	/**
+	 * 修改优惠券产品
+	 * @param token
+	 * @param id
+	 * @param couponId
+	 * @param type
+	 * @param objectId
+	 */
+	@Before(CustomerPcAuthInterceptor.class)
+	public void updateCouponProduct() {
+		String[] params = {"id", "copuonId", "type", "objectId"};
+		
+		if (!validate(params)) {
+			return;
+		}
+		
+		int id = getParaToInt("id");
+		int couponId = getParaToInt("couponId");
+		int type = getParaToInt("type");
+		int objectId = getParaToInt("objectId");
+		
+		CouponProduct model = CouponProductService.getCouponProduct(id);
+		model.setCouponId(couponId);
+		model.setType(type);
+		model.setObjectId(objectId);
+		
+		ServiceCode code = CouponProductService.updateCouponProduct(model);
+		
+		if (code != ServiceCode.Success) {
+			setError(ErrorCode.Exception, "创建失败");
+		}
+		
+		renderJson(jsonObject);
+	}
+	
+	/**
+	 * 删除优惠券产品
+	 * @param token
+	 * @param id
+	 */
+	@Before(CustomerPcAuthInterceptor.class)
+	public void deleteCouponProduct() {
+		String[] params = {"id"};
+		
+		if (!validate(params)) {
+			return;
+		}
+		
+		int id = getParaToInt("id");
+		ServiceCode code = CouponProductService.deleteCouponProduct(id);
+		
+		if (code != ServiceCode.Success) {
+			setError(ErrorCode.Exception, "删除失败");
+		}
+		
+		renderJson(jsonObject);
+	}
+	
+	/**
+	 * 查看优惠券产品详情
+	 * @param token
+	 * @param id
+	 */
+	@Before(CustomerPcAuthInterceptor.class)
+	public void getCouponProduct() {
+		String[] params = {"id"};
+		
+		if (!validate(params)) {
+			return;
+		}
+		
+		int id = getParaToInt("id");
+		CouponProduct model = CouponProductService.getCouponProduct(id);
+		
+		jsonObject.put("data", model);
+		renderJson(jsonObject);
+	}
+	
+	/**
+	 * 批量查询优惠券产品
+	 * @param token
+	 * @param offset
+	 * @param length
+	 * @param couponId
+	 * @param type
+	 * @param name
+	 */
+	@Before(CustomerPcAuthInterceptor.class)
+	public void findCouponProducts() {
+		String[] params = {"pageSize", "pageNumber"};
+		
+		if (!validate(params)) {
+			return;
+		}
+		
+		int pageNumber = getParaToInt("pageNumber");
+		int length = getParaToInt("pageSize");
+		int offset = (pageNumber - 1) * length;
+		Integer couponId = (getPara("id") != null) ? getParaToInt("id") : null;
+		Integer type = (getPara("type") != null) ? getParaToInt("type") : null;
+		String name = getPara("name");
+		
+		List<Record> list = CouponProductService.findCouponProductItems(offset, length, couponId, type, null, name);
+		int total = CouponProductService.countCouponProductItems(couponId, type, null, name);
+		int totalPage = total%length == 0? total/length: total/length+1;
+		List<Record> records = new ArrayList<>();
+		for(Record record: list) {
+			if(record.getInt("objectId") != null) {
+				record.set("suggestedRetailUnitPrice", Member.getProduct((record.getInt("objectId"))).getSuggestedRetailUnitPrice());
+			}else {
+				record.set("suggestedRetailUnitPrice", "");
+			}
+			records.add(record);
+		}
+		jsonObject.put("data", records);
+		jsonObject.put("pageNumber", offset);
+		jsonObject.put("length", length);
+		jsonObject.put("totalRow", total);
+		jsonObject.put("totalPage", totalPage);
+		renderJson(jsonObject);
+	}
+	
+	
+	
+	/**
+	 * 根据会员ID领取优惠券
+	 * @param token
+	 * @param couponId
+	 * @return 成功：{error:-1已过期，-2已被领完，-3已领取，0成功} 失败：{error:>0, errmsg:错误信息}
+	 */
+	@Before(CustomerPcAuthInterceptor.class)
+	public void receiveCouponByCustomerId() {
+		String[] params = {"couponId"};
+		
+		if (!validate(params)) {
+			return;
+		}
+		
+		int couponId = getParaToInt("couponId");
+		
+		String token = getPara("token");
+		Customer customer = (Customer) CacheHelper.get(token);
+		int customerId = customer.getId();
+		
+		int code = CustomerCouponService.receiveCoupon(customerId, couponId);
+		
+		// -1已过期，-2已被领完，-3已领取，0成功，1失败
+		Map<Integer, String> map = new HashMap<Integer, String>();
+		map.put(-1, "优惠券已过期");
+		map.put(-2, "优惠券已被领完");
+		map.put(-3, "已领取");
+		map.put(0, "成功");
+		map.put(1, "领取失败");
+		
+		setError(code, map.get(code));
+		renderJson(jsonObject);
+	}
+	
+	/**
+	 * 根据手机号码领取优惠券
+	 * @param token
+	 * @param couponId
+	 * @param phone
+	 * @return 成功：{error:-1已过期，-2已被领完，-3已领取，0成功} 失败：{error:>0, errmsg:错误信息}
+	 */
+	@Before(CustomerPcAuthInterceptor.class)
+	public void receiveCouponByPhone() {
+		String[] params = {"couponId", "phone"};
+		
+		if (!validate(params)) {
+			return;
+		}
+		
+		int couponId = getParaToInt("couponId");
+		String phone = getPara("phone");
+		
+		int code = CustomerCouponService.receiveCoupon(phone, couponId);
+		
+		// -1已过期，-2已被领完，-3已领取，0成功，1失败
+		Map<Integer, String> map = new HashMap<Integer, String>();
+		map.put(-1, "优惠券已过期");
+		map.put(-2, "优惠券已被领完");
+		map.put(-3, "已领取");
+		map.put(0, "成功");
+		map.put(1, "领取失败");
+		
+		setError(code, map.get(code));
+		renderJson(jsonObject);
+	}
+	
+	/**
+	 * 删除已领取的优惠券
+	 * @param token
+	 * @param id
+	 */
+	@Before(CustomerPcAuthInterceptor.class)
+	public void deleteCustomerCoupon() {
+		String[] params = {"id"};
+		
+		if (!validate(params)) {
+			return;
+		}
+		
+		int id = getParaToInt("id");
+		
+		ServiceCode code = CustomerCouponService.deleteCustomerCoupon(id);
+		
+		if (code != ServiceCode.Success) {
+			setError(ErrorCode.Exception, "删除失败");
+		}
+		
+		renderJson(jsonObject);
+	}
+	
+	/**
+	 * 批量查询已领取的优惠券
+	 * @param token
+	 * @param offset
+	 * @param length
+	 * @param startCreatedAt
+     * @param endCreatedAt
+     * @param isUsed
+     * @param code
+     * @param phone
+     * @param isTimeOut (0未过期，1已过期)
+     * @param type 1折扣券，2现金券
+     * @param title
+     * @param baseOn
+     * @param scope
+	 */
+	@Before(CustomerPcAuthInterceptor.class)
+	public void findCustomerCoupons() {
+		String[] params = {"pageNumber", "pageSize"};
+		
+		if (!validate(params)) {
+			return;
+		}
+		int couponId = getParaToInt("id");
+		int pageNumber = getParaToInt("pageNumber");
+		int length = getParaToInt("pageSize");
+		int offset = (pageNumber - 1) * length;
+		String startCreatedAt = (getPara("startCreatedAt") != null) ? DateHelper.formatDateTime(getParaToDate("startCreatedAt")) : null;
+		String endCreatedAt = (getPara("endCreatedAt") != null) ? DateHelper.formatDateTime(getParaToDate("endCreatedAt")) : null;
+		Integer isUsed = (getPara("isUsed") != null) ? getParaToInt("isUsed") : null;
+		String code = getPara("code");
+		String phone = getPara("phone");
+		Integer isTimeOut  = (getPara("isTimeOut") != null) ? getParaToInt("isTimeOut") : null;
+		Integer type  = (getPara("type") != null) ? getParaToInt("type") : null;
+		String title = getPara("title");
+		Integer baseOn  = (getPara("baseOn") != null) ? getParaToInt("baseOn") : null;
+		Integer scope  = (getPara("scope") != null) ? getParaToInt("scope") : null;
+		
+		String token = getPara("token");
+		Customer customer = (Customer) CacheHelper.get(token);
+		int customerId = customer.getId();
+		
+		List<Record> list = CustomerCouponService.findCustomerCouponItems(offset, length, customerId, couponId, isTimeOut, type, startCreatedAt, endCreatedAt, isUsed, code, phone, title, baseOn, scope);
+		int total = CustomerCouponService.countCustomerCouponItems(customerId, isTimeOut, type, startCreatedAt, endCreatedAt, isUsed, code, phone, title, baseOn, scope);
+		List<Record> records = new ArrayList<>();
+		for(Record record: list) {
+			if(record.getInt("customerId") != null) {
+				record.set("name", Member.getCustomerName(record.getInt("customerId")));
+			}else {
+				record.set("name", "");
+			}
+			records.add(record);
+		}
+		int totalPage = total%length == 0? total/length: total/length+1;
+		jsonObject.put("data", records);
+		jsonObject.put("pageNumber", pageNumber);
+		jsonObject.put("pageSize", length);
+		jsonObject.put("totalRow", total);
+		jsonObject.put("totalPage", totalPage);
+		renderJson(jsonObject);
+	}
+	
+	/**
+	 * 查看某个产品的适用优惠券
+	 * @param productId
+	 */
+	public void productCoupons() {
+		String[] params = {"productId"};
+		
+		if (!validate(params)) {
+			return;
+		}
+		
+		int productId = getParaToInt("productId");
+		List<Coupon> list = CouponService.getCouponSlogans(productId);
+
+		String token = getPara("token");
+		Customer customer = (Customer)CacheHelper.get(token);
+
+		for(Coupon coupon : list){
+			coupon.put("isGeted",0);
+		}
+
+		if(customer.getId()!=null){
+			for(Coupon coupon:list){
+				Integer customerCoupon  = CouponProductService.listCustCoupon(customer.getId(),coupon.getInt("couponId"));
+				if(customerCoupon>0){
+					coupon.set("isGeted",1);
+				}
+			}
+		}
+		jsonObject.put("data", list);
+		renderJson(jsonObject);
+	}
+	
+	/**
+	 * 查看某个订单的适用优惠券
+	 * @param token
+	 * @param products [{product_id:1,amount:3,price:8,shop_id:1},...]
+	 */
+	@Before(CustomerPcAuthInterceptor.class)
+	public void orderCoupons() {
+		String[] params = {"products"};
+		
+		if (!validate(params)) {
+			return;
+		}
+		
+		String products = getPara("products");
+		List<Record> records = this.arrayToList(JSON.parseArray(products));
+		
+		String token = getPara("token");
+		Customer customer = (Customer) CacheHelper.get(token);
+		int customerId = customer.getId();
+		
+		List<Coupon> list = CouponService.coupons(customerId, records);
+		
+		jsonObject.put("data", list);
+		renderJson(jsonObject);
+	}
+	
+	private List<Record> arrayToList(JSONArray array) {
+		List<Record> list = new ArrayList<Record>();
+		for (int i = 0; i < array.size(); i++) {
+			Record record = new Record();
+			JSONObject obj = array.getJSONObject(i);
+			record.set("product_id", obj.getInteger("product_id"));
+			record.set("amount", obj.getInteger("amount"));
+			record.set("price", obj.getDouble("price"));
+			record.set("shop_id", obj.getInteger("shop_id"));
+			list.add(record);
+		}
+		return list;
+	}
+	
+	/**
+	 * 计算某个优惠券的优惠金额
+	 * @param token
+	 * @param couponId
+	 * @param products
+	 * @return 成功：{error:0, discount:3.3} 失败：{error:>0, errmsg:错误信息}
+	 */
+	@Before(CustomerPcAuthInterceptor.class)
+	public void calculateDiscount() {
+		String[] params = {"products", "couponId"};
+		
+		if (!validate(params)) {
+			return;
+		}
+		
+		int couponId = getParaToInt("couponId");
+		String products = getPara("products");
+		List<Record> records = JSON.parseArray(products, Record.class);
+		
+		double discount = 0;
+		Coupon coupon = CouponService.getCoupon(couponId);
+		int type = coupon.getType();
+		
+		if (type == CouponService.COUPON_CASH) {
+			discount = cashCouponService.calculateDiscount(couponId, records);
+		} else if (type == CouponService.COUPON_DISCOUNT) {
+			discount = discountCouponService.calculateDiscount(couponId, records);
+		}
+		
+		jsonObject.put("discount", discount);
+		renderJson(jsonObject);
+	}
+	
+	
+	/**
+	 * 获取没有添加在某优惠券的所有商品
+	 * @param offset 开始页数 1
+	 * @param length 条数
+	 * @param couponId 优惠券id
+	 * @return {id:商品id, name:商品名称, mainPic:商品图片}
+	 */
+	@Before(CustomerPcAuthInterceptor.class)
+	public void getshopProducts() {
+		String[] params = {"pageNumber", "pageSize", "couponId"};
+		if (!validate(params)) {
+			return;
+		}
+		Integer offset = getParaToInt("pageNumber");
+		Integer length = getParaToInt("pageSize");
+		
+		Integer couponId = getParaToInt("couponId");
+		String productName = getPara("shopProductName");
+		String token = getPara("token");
+		Customer customer = (Customer) CacheHelper.get(token);
+    	int shopId = customer.getShopId();
+    	
+		Page<Product> page = CouponProductService.getProductsNoThisCoupon(offset, length, couponId, shopId, productName);
+		
+		jsonObject.put("offset", page.getPageNumber());
+		jsonObject.put("length", page.getPageSize());
+		jsonObject.put("totalPage", page.getTotalPage());
+		jsonObject.put("totalRow", page.getTotalRow());
+		jsonObject.put("data", page.getList());
+		renderJson(jsonObject);
+	}
+	
+	/**
+	 * 批量创建优惠券商品
+	 */
+	public void batchCreateCouponProduct() {
+		String[] params = {"couponId", "type", "objectIds"};
+		
+		if (!validate(params)) {
+			return;
+		}
+		
+		Integer couponId = getParaToInt("couponId");
+		Integer type = getParaToInt("type");
+		String objectIds = getPara("objectIds");
+		
+		ServiceCode code = 	CouponProductService.batchCreateCouponProducts(type, couponId, objectIds);
+		
+		if (code != ServiceCode.Success) {
+			setError(ErrorCode.Exception, "创建失败");
+		}
+		
+		renderJson(jsonObject);
+	}
+
+	/**
+	 *
+	 * 查询优惠卷
+	 */
+	@Before(CustomerPcAuthInterceptor.class)
+	public void listCoupon(){
+
+		Integer offset = getParaToInt("offset");
+		Integer length = getParaToInt("length");
+
+		String token = getPara("token");
+		Customer customer = (Customer) CacheHelper.get(token);
+
+		List<Record>coupon = CouponProductService.listCoupon(offset,length);
+
+		for(Record record:coupon){
+			record.set("isGeted",0);
+
+		}
+		if(customer.getId()!=null){
+			for(Record record:coupon){
+
+				Integer customerCoupon  = CouponProductService.listCustCoupon(customer.getId(),record.getInt("couponId"));
+				if(customerCoupon>0){
+					record.set("isGeted",1);
+				}
+			}
+		}
+		jsonObject.put("coupon",coupon);
+		renderJson(jsonObject);
+	}
+
+	/**
+	 *
+	 * 领取优惠卷
+	 */
+	@Before(CustomerPcAuthInterceptor.class)
+	public void saveCoupon(){
+
+		String token = getPara("token");
+		Customer customer = (Customer) CacheHelper.get(token);
+
+		Integer couponId = getParaToInt("couponId");
+		Integer customerId = customer.getId();
+		String phone = customer.getMobilePhone();
+		ServiceCode code=  CouponProductService.saveCustomerCoupon(customerId,couponId,phone);
+		if (code != ServiceCode.Success) {
+			setError(ErrorCode.Exception, "创建失败");
+		}
+
+		renderJson(jsonObject);
+	}
+
+	/**
+	 *
+	 * 查询个人所有优惠卷
+	 * @param customerId
+	 */
+	@Before(CustomerPcAuthInterceptor.class)
+	public void listCustomerCoupon(){
+
+		String token = getPara("token");
+		Customer customer = (Customer)CacheHelper.get(token);
+
+		List<Record>list = CouponProductService.listCustomerCoupon(customer.getId());
+
+		jsonObject.put("customerCoupon",list);
+		renderJson(jsonObject);
+	}
+
+	/**
+	 *
+	 * 提交订单 修改优惠卷状态
+	 * @param customerid
+	 * @param couponId
+	 */
+	@Before(CustomerPcAuthInterceptor.class)
+	public void updateCustomerCouponisUsed(){
+
+		String[] params = {"couponId"};
+
+		if (!validate(params)) {
+			return;
+		}
+
+		String token = getPara("token");
+		Customer customer = (Customer)CacheHelper.get(token);
+		Integer couponId = getParaToIntDefault("couponId");
+
+		ServiceCode code = CouponProductService.updateCustomerCoupon(customer.getId(),couponId);
+		if (code != ServiceCode.Success) {
+			setError(ErrorCode.Exception, "修改失败");
+		}
+		renderJson(jsonObject);
+	}
+}

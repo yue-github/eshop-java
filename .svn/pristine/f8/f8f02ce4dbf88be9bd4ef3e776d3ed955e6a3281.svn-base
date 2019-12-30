@@ -1,0 +1,252 @@
+package com.eshop.helper;
+
+import java.io.File;
+import java.util.*;
+
+import javax.servlet.http.HttpServletRequest;
+
+
+import com.alibaba.druid.sql.dialect.db2.visitor.DB2ASTVisitor;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.cike.entity.Order;
+import com.cike.entity.OrderConstant;
+import com.cike.entity.OrderReturn;
+import com.cike.util.Config;
+import com.cike.util.HttpUtil;
+import com.cike.util.QRCode;
+import com.cike.util.Sign;
+import com.cike.util.XmlUtil;
+import com.eshop.event.EventEnum;
+import com.eshop.model.CustomerGold;
+import com.eshop.model.Gold;
+import com.eshop.model.Shop;
+import com.eshop.model.Wallet;
+import com.eshop.model.dao.BaseDao;
+import com.eshop.model.dao.BaseDao.ServiceCode;
+import com.eshop.service.Member;
+import com.jfinal.kit.Prop;
+import com.jfinal.kit.PropKit;
+import com.jfinal.plugin.activerecord.Db;
+import com.jfinal.plugin.activerecord.Record;
+
+import me.chanjar.weixin.mp.bean.result.WxMpPayCallback;
+
+
+/**
+ * 微信支付辅助类
+ * @author TangYiFeng
+ */
+public class WxPayPCHelper {
+	
+	/**
+	 * 
+	 * @Title: placeOrder
+	 * @Description: 统一下单
+	 * @param body 商品描述
+	 * @param out_trade_no 商户订单号
+	 * @param total_fee 订单总金额，单位为分
+	 * @throws Exception
+	 * @return: OrderReturn
+	 */
+	public static OrderReturn placeOrder(String body, String out_trade_no, String total_fee) throws Exception {
+		String notify_url = PropKit.get("apiHostName") + PropKit.get("weixinPayNotifyUrl");
+		OrderReturn or = placeOrder(body, out_trade_no, total_fee, notify_url);
+		return or;
+	}
+	
+	/**
+	 * 
+	 * @Title: placeOrder
+	 * @Description: 统一下单
+	 * @param body 商品描述
+	 * @param out_trade_no 商户订单号
+	 * @param total_fee 订单总金额，单位为分
+	 * @param notify_url
+	 * @throws Exception
+	 * @return: OrderReturn
+	 */
+	public static OrderReturn placeOrder(String body, String out_trade_no, String total_fee, String notify_url) throws Exception {
+		// 生成订单对象
+		Order o = new Order();
+		// 随机字符串
+		String nonce_str = UUID.randomUUID().toString().trim().replaceAll("-", "");
+		o.setAppid(Config.APPID);
+		o.setBody(body);
+		o.setMch_id(Config.MCH_ID);
+		o.setNotify_url(notify_url);
+		o.setOut_trade_no(out_trade_no);
+		// 判断有没有输入订单总金额，没有输入默认1分钱
+		if (total_fee != null && !total_fee.equals("")) {
+			o.setTotal_fee(Integer.parseInt(total_fee));
+		} else {
+			o.setTotal_fee(1);
+		}
+		o.setNonce_str(nonce_str);
+		o.setTrade_type(Config.TRADE_TYPE);
+		o.setSpbill_create_ip(Config.SPBILL_CREATE_IP);
+		SortedMap<Object, Object> p = new TreeMap<Object, Object>();
+		p.put("appid", Config.APPID);
+		p.put("mch_id", Config.MCH_ID);
+		p.put("body", body);
+		p.put("nonce_str", nonce_str);
+		p.put("out_trade_no", out_trade_no);
+		p.put("total_fee", total_fee);
+		p.put("spbill_create_ip", Config.SPBILL_CREATE_IP);
+		p.put("notify_url", notify_url);
+		p.put("trade_type", Config.TRADE_TYPE);
+		// 得到签名
+		String sign = Sign.createSign("utf-8", p, Config.KEY);
+		o.setSign(sign);
+		// Object转换为XML
+		String xml = XmlUtil.object2Xml(o, Order.class);
+		// 统一下单地址
+		String url = OrderConstant.PLACEANORDER;
+		// 调用微信统一下单地址
+		String returnXml = HttpUtil.sendPost(url, xml);
+		// XML转换为Object
+		OrderReturn or = (OrderReturn) XmlUtil.xml2Object(returnXml, OrderReturn.class);
+		return or;
+	}
+	
+	/**
+	 * 微信支付
+	 * @param body
+	 * @param outTradeNo
+	 * @param totalFee
+	 * @param request
+	 * @return
+	 */
+	public static String wxpay(String body, String outTradeNo, String totalFee, HttpServletRequest request) {
+		String code = "";
+		try {
+			// 统一下单
+			Prop p = PropKit.use("callBackUrl.txt");
+			String notifyUrl = p.get("apiHostName") + p.get("weixinPayNotifyUrl");
+			OrderReturn orderReturn = WxPayPCHelper.placeOrder(body, outTradeNo, totalFee, notifyUrl);
+			// 创建支付二维码
+			String path = request.getSession().getServletContext().getRealPath("/");
+			code = createCode(path, orderReturn);
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+		
+		return code;
+	}
+	
+	public static String wxpay(String body, String outTradeNo, String totalFee, HttpServletRequest request, String notifyUrl) {
+		String code = "";
+		try {
+			// 统一下单
+			OrderReturn orderReturn = WxPayPCHelper.placeOrder(body, outTradeNo, totalFee, notifyUrl);
+			// 创建支付二维码
+			String path = request.getSession().getServletContext().getRealPath("/");
+			code = createCode(path, orderReturn);
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+		
+		return code;
+	}
+	
+	/**
+	 * 订单支付回调处理
+	 * @param xmlData
+	 * @return
+	 */
+	public static ServiceCode wxPcPayCallback(String xmlData) {
+    	WxMpPayCallback result = WxPayHelper.getPayCallback(xmlData);
+    	
+    	String order_code = result.getOut_trade_no();
+    	String transaction_id = result.getTransaction_id();
+    	
+    	if(order_code != null && order_code != "") {
+    		List<Record> orders = Db.find("select * from `order` where theSameOrderNum = ? or order_code = ?", order_code, order_code);
+			for (Record order : orders) {
+				if (order.getInt("status") == BaseDao.UNPAY) {
+		    		Db.update("update `order` set status = ?, tradeNo = ?, payTime = ? where id = ?", BaseDao.PAYED, transaction_id, new Date(), order.getInt("id"));
+				}
+			}
+//    		Db.update("update `order` set status = ?, tradeNo = ?, payTime = ? where theSameOrderNum = ? or order_code = ?", BaseDao.PAYED, transaction_id, new Date(), order_code, order_code);
+    		//更新商品销售量和销售额
+    		Member.updateProduct(order_code);
+    		//客户下单成功，通知商家
+    		Shop shop = Member.getShopByOrderCode(order_code);
+    		Member.informShop(shop, "【乐驿商城】订单支付成功啦，请及时处理订单", "【乐驿商城】您有一笔订单支付成功提醒", "【乐驿商城】订单支付成功啦，请及时处理订单");
+
+    		String string =  CacheHelper.get("json").toString();
+			final JSONObject jsarr = JSON.parseObject(string);
+			CustomerGold customerGold = new CustomerGold();
+			customerGold.setCustomerId(jsarr.getIntValue("CustomerId"));
+			customerGold.setAmount(jsarr.getIntValue("Amount"));
+			customerGold.setType(jsarr.getIntValue("Type"));
+			customerGold.setNote(jsarr.getString("note"));
+			customerGold.setRelateId(jsarr.getIntValue("RelateId"));
+			customerGold.setCreatedAt(jsarr.getDate("CreatedAt"));
+			customerGold.setUpdatedAt(jsarr.getDate("UpdatedAt"));
+			customerGold.setSource(jsarr.getIntValue("Source"));
+			customerGold.save();
+			Record record = Db.findFirst("select * from customer where id =?",customerGold.getCustomerId());
+			if(record!=null){
+				Integer gold = Integer.valueOf(CacheHelper.get("gold").toString());
+				Integer count = record.getInt("golds");
+				count = count - gold+customerGold.getAmount();
+				Db.update("update customer set golds =? where id=?",count,customerGold.getCustomerId());
+			}
+			Integer couponId = Integer.valueOf(CacheHelper.get("couponId").toString());
+			Db.update("update customer_coupon set isUsed =? where customerId=? and couponId=?",1,jsarr.getIntValue("CustomerId"),couponId);
+			CacheHelper.remove("couponId");
+			CacheHelper.remove("json");
+    	}
+    	return ServiceCode.Success;
+    }
+	
+	/**
+     * 充值支付回调
+     * @param xmlData 微信返回数据
+     * @throws ServiceCode 返回码 
+     */
+    public static ServiceCode wxPcRechargeCallback(String xmlData) {
+    	WxMpPayCallback result = WxPayHelper.getPayCallback(xmlData);
+    	
+    	String out_trade_no = result.getOut_trade_no();
+    	String transaction_id = result.getTransaction_id();
+    	
+    	if(out_trade_no != null && !out_trade_no.equals("")) {
+    		Wallet wallet = Wallet.dao.findFirst("select * from wallet where tradeNo = ?", out_trade_no);
+    		
+    		if (wallet != null) {
+    			wallet.setFinishTime(new Date());
+    			wallet.setUpdatedAt(new Date());
+    			wallet.setIsPaySuccess(1);
+    			wallet.setTransactionId(transaction_id);
+    			wallet.update();
+    		}
+    	}
+    	
+    	return ServiceCode.Success;
+    }
+
+	/**
+	 * 
+	 * @Title: createCode
+	 * @Description: 生成支付二维码
+	 * @param path 项目绝对路径
+	 * @throws Exception
+	 * @return: String
+	 */
+	public static String createCode(String path, OrderReturn orderReturn) throws Exception {
+		File file = new File(path + "common/QRCode");
+		if (!file.exists()) {
+			file.mkdirs();
+		}
+		QRCode q = new QRCode();
+		String fileName = UUID.randomUUID().toString();
+		String filePath = "common/QRCode/" + fileName + ".png";
+		String imgPath = path + filePath;
+		q.encoderQRCode(orderReturn.getCode_url(), imgPath);
+		return filePath;
+	}	 
+	
+} 

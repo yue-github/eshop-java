@@ -1,0 +1,169 @@
+2019-12-29 22:33:25,634 [http-nio-8765-exec-6] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/test
+2019-12-29 22:34:31,392 [http-nio-8765-exec-9] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/test
+2019-12-29 22:34:52,581 [http-nio-8765-exec-2] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/test
+2019-12-29 23:03:55,509 [http-nio-8765-exec-9] [com.jfinal.core.ActionHandler] [ERROR] - /pc/test/test
+java.lang.RuntimeException: java.lang.reflect.InvocationTargetException
+	at com.jfinal.aop.Invocation.invoke(Invocation.java:87)
+	at com.eshop.interceptor.RequestInterceptor.intercept(RequestInterceptor.java:51)
+	at com.jfinal.aop.Invocation.invoke(Invocation.java:67)
+	at com.jfinal.core.ActionHandler.handle(ActionHandler.java:74)
+	at com.jfinal.core.JFinalFilter.doFilter(JFinalFilter.java:72)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)
+	at com.thetransactioncompany.cors.CORSFilter.doFilter(CORSFilter.java:209)
+	at com.thetransactioncompany.cors.CORSFilter.doFilter(CORSFilter.java:244)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:199)
+	at org.apache.catalina.core.StandardContextValve.__invoke(StandardContextValve.java:96)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:490)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:139)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:92)
+	at org.apache.catalina.valves.AbstractAccessLogValve.invoke(AbstractAccessLogValve.java:668)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:343)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:408)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:66)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:770)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1415)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:49)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.lang.Thread.run(Thread.java:748)
+Caused by: java.lang.reflect.InvocationTargetException
+	at com.zeroturnaround.jrebelbase.facade.r.throwWrappedNoSuchMethodError(SourceFile:170)
+	at com.zeroturnaround.jrebelbase.facade.r.checkMethodRemoved(SourceFile:192)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at com.jfinal.aop.Invocation.invoke(Invocation.java:73)
+	... 28 more
+Caused by: java.lang.NoSuchMethodError: com.eshop.controller.pc.TestController.test()V
+	... 32 more
+2019-12-29 23:04:18,181 [http-nio-8765-exec-1] [com.jfinal.core.ActionHandler] [ERROR] - /pc/test/test
+java.lang.RuntimeException: java.lang.reflect.InvocationTargetException
+	at com.jfinal.aop.Invocation.invoke(Invocation.java:87)
+	at com.eshop.interceptor.RequestInterceptor.intercept(RequestInterceptor.java:51)
+	at com.jfinal.aop.Invocation.invoke(Invocation.java:67)
+	at com.jfinal.core.ActionHandler.handle(ActionHandler.java:74)
+	at com.jfinal.core.JFinalFilter.doFilter(JFinalFilter.java:72)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)
+	at com.thetransactioncompany.cors.CORSFilter.doFilter(CORSFilter.java:209)
+	at com.thetransactioncompany.cors.CORSFilter.doFilter(CORSFilter.java:244)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:199)
+	at org.apache.catalina.core.StandardContextValve.__invoke(StandardContextValve.java:96)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:490)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:139)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:92)
+	at org.apache.catalina.valves.AbstractAccessLogValve.invoke(AbstractAccessLogValve.java:668)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:343)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:408)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:66)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:770)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1415)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:49)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.lang.Thread.run(Thread.java:748)
+Caused by: java.lang.reflect.InvocationTargetException
+	at com.zeroturnaround.jrebelbase.facade.r.throwWrappedNoSuchMethodError(SourceFile:170)
+	at com.zeroturnaround.jrebelbase.facade.r.checkMethodRemoved(SourceFile:192)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at com.jfinal.aop.Invocation.invoke(Invocation.java:73)
+	... 28 more
+Caused by: java.lang.NoSuchMethodError: com.eshop.controller.pc.TestController.test()V
+	... 32 more
+2019-12-29 23:04:20,552 [http-nio-8765-exec-3] [com.jfinal.core.ActionHandler] [ERROR] - /pc/test/test
+java.lang.RuntimeException: java.lang.reflect.InvocationTargetException
+	at com.jfinal.aop.Invocation.invoke(Invocation.java:87)
+	at com.eshop.interceptor.RequestInterceptor.intercept(RequestInterceptor.java:51)
+	at com.jfinal.aop.Invocation.invoke(Invocation.java:67)
+	at com.jfinal.core.ActionHandler.handle(ActionHandler.java:74)
+	at com.jfinal.core.JFinalFilter.doFilter(JFinalFilter.java:72)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)
+	at com.thetransactioncompany.cors.CORSFilter.doFilter(CORSFilter.java:209)
+	at com.thetransactioncompany.cors.CORSFilter.doFilter(CORSFilter.java:244)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:199)
+	at org.apache.catalina.core.StandardContextValve.__invoke(StandardContextValve.java:96)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:490)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:139)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:92)
+	at org.apache.catalina.valves.AbstractAccessLogValve.invoke(AbstractAccessLogValve.java:668)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:343)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:408)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:66)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:770)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1415)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:49)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.lang.Thread.run(Thread.java:748)
+Caused by: java.lang.reflect.InvocationTargetException
+	at com.zeroturnaround.jrebelbase.facade.r.throwWrappedNoSuchMethodError(SourceFile:170)
+	at com.zeroturnaround.jrebelbase.facade.r.checkMethodRemoved(SourceFile:192)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at com.jfinal.aop.Invocation.invoke(Invocation.java:73)
+	... 28 more
+Caused by: java.lang.NoSuchMethodError: com.eshop.controller.pc.TestController.test()V
+	... 32 more
+2019-12-29 23:04:22,756 [http-nio-8765-exec-5] [com.jfinal.core.ActionHandler] [ERROR] - /pc/test/test
+java.lang.RuntimeException: java.lang.reflect.InvocationTargetException
+	at com.jfinal.aop.Invocation.invoke(Invocation.java:87)
+	at com.eshop.interceptor.RequestInterceptor.intercept(RequestInterceptor.java:51)
+	at com.jfinal.aop.Invocation.invoke(Invocation.java:67)
+	at com.jfinal.core.ActionHandler.handle(ActionHandler.java:74)
+	at com.jfinal.core.JFinalFilter.doFilter(JFinalFilter.java:72)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)
+	at com.thetransactioncompany.cors.CORSFilter.doFilter(CORSFilter.java:209)
+	at com.thetransactioncompany.cors.CORSFilter.doFilter(CORSFilter.java:244)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:199)
+	at org.apache.catalina.core.StandardContextValve.__invoke(StandardContextValve.java:96)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:490)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:139)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:92)
+	at org.apache.catalina.valves.AbstractAccessLogValve.invoke(AbstractAccessLogValve.java:668)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:343)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:408)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:66)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:770)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1415)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:49)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.lang.Thread.run(Thread.java:748)
+Caused by: java.lang.reflect.InvocationTargetException
+	at com.zeroturnaround.jrebelbase.facade.r.throwWrappedNoSuchMethodError(SourceFile:170)
+	at com.zeroturnaround.jrebelbase.facade.r.checkMethodRemoved(SourceFile:192)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at com.jfinal.aop.Invocation.invoke(Invocation.java:73)
+	... 28 more
+Caused by: java.lang.NoSuchMethodError: com.eshop.controller.pc.TestController.test()V
+	... 32 more
+2019-12-29 23:06:02,561 [http-nio-8765-exec-9] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/testq
+2019-12-29 23:06:22,290 [http-nio-8765-exec-1] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/testq
+2019-12-29 23:06:32,543 [http-nio-8765-exec-4] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/testq
+2019-12-29 23:09:47,901 [http-nio-8765-exec-6] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/testQ
+2019-12-29 23:11:26,750 [http-nio-8765-exec-3] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/testq1
+2019-12-29 23:11:46,689 [http-nio-8765-exec-6] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/testq1
+2019-12-29 23:33:21,472 [http-nio-8765-exec-3] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/testq2
+2019-12-29 23:33:34,759 [http-nio-8765-exec-5] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/testq2
+2019-12-29 23:33:59,995 [http-nio-8765-exec-9] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/testq2
+2019-12-29 23:34:00,535 [http-nio-8765-exec-10] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/testq2

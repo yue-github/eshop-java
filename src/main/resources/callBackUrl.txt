@@ -1,0 +1,14 @@
+apiHostName=http://192.168.31.180:8765
+frontHostName=http://www.eebin.com
+activeEmailUrl=/pc/register/activite
+emailRegisterFailUrl=/eshop-pc/WebContent/index.html#/registerResultFail
+emailRegisterSuccessUrl=/eshop-pc/WebContent/index.html#/registerResult
+pcReturnUrl=/#/home
+appReturnUrl=/#home
+logisticsNotifyUrl=/pc/order/logisticsCallback
+weixinPayNotifyUrl=/pc/comfirmOrder/wxpayCallback
+aliPayNotifyUrl=/pc/comfirmOrder/alipayCallBack
+unionPayNotifyUrl=/pc/comfirmOrder/unionpayCallback
+wxPcRechargeCallback=/pc/wallet/wxPcRechargeCallback
+alipayRechargeCallBack=/pc/wallet/alipayRechargeCallBack
+unionRechargeCallBack=/pc/wallet/unionRechargeCallBack

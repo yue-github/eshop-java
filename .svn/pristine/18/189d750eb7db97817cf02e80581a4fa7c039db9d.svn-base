@@ -1,0 +1,401 @@
+package com.eshop.membership;
+
+import java.sql.SQLException;
+import java.util.*;
+
+import com.eshop.log.Log;
+import com.eshop.model.Customer;
+import com.eshop.model.CustomerGold;
+import com.eshop.model.CustomerGrade;
+import com.eshop.model.CustomerGrowth;
+import com.eshop.model.CustomerPoint;
+import com.eshop.model.CustomerPointRule;
+import com.eshop.model.dao.BaseDao.ServiceCode;
+import com.jfinal.plugin.activerecord.Db;
+import com.jfinal.plugin.activerecord.IAtom;
+
+/**
+ * 会员体系基类
+ */
+public class MemberShip {
+	
+	public static final int GOLD_EXCHNAGE = 2;
+	public static final int REGISTER_POINT = 3;
+    public static final int REGISTER_GROWTH = 4;
+    public static final int UPDATE_INFO_POINT = 5;
+    public static final int UPDATE_INFO_GROWTH = 6;
+    public static final int INVITE_REGISTER_POINT = 7;
+    public static final int INVITE_REGISTER_GROWTH = 8;
+    public static final int SIGN_IN_POINT = 9;
+    public static final int SIGN_IN_GROWTH = 10;
+    public static final int SUBMIT_COMMENT_POINT = 11;
+    public static final int SUBMIT_COMMENT_GROWTH = 12;
+    public static final int CLICK_ADV_POINT = 13;
+    public static final int CLICK_ADV_GROWTH = 14;
+    public static final int SHARE_LINK_POINT = 15;
+    public static final int SHARE_LINK_GROWTH = 16;
+    public static final int BUY_SPECIALTY_THIRDPAY_POINT = 17;
+    public static final int BUY_SPECIALTY_THIRDPAY_GOLD = 18;
+    public static final int BUY_SPECIALTY_THIRDPAY_GROWTH = 19;
+    public static final int BUY_SPECIALTY_WALLETPAY_POINT = 20;
+    public static final int BUY_SPECIALTY_WALLETPAY_GOLD = 21;
+    public static final int BUY_SPECIALTY_WALLETPAY_GROWTH = 22;
+    public static final int BUY_TRAVEL_THIRDPAY_POINT = 23;
+    public static final int BUY_TRAVEL_THIRDPAY_GOLD = 24;
+    public static final int BUY_TRAVEL_THIRDPAY_GROWTH = 25;
+    public static final int BUY_TRAVEL_WALLETPAY_POINT = 26;
+    public static final int BUY_TRAVEL_WALLETPAY_GOLD = 27;
+    public static final int BUY_TRAVEL_WALLETPAY_GROWTH = 28;
+
+    /**
+     * 获取积分
+     * @param customerId
+     * @param source
+     * @param relateId
+     * @return
+     */
+    public static ServiceCode gainPoint(final int customerId, final int source, final int relateId, final double total) {
+        CustomerPointRule rule = CustomerPointRule.dao.findFirst("select * from customer_point_rule where code = ?", source);
+        
+        if (rule == null) {
+			return ServiceCode.Failed;
+		}
+        
+        final int amount = (int)total / rule.getOriginal().intValue() * rule.getTarget().intValue();
+        final String note = rule.getNote();
+        
+        boolean success = Db.tx(new IAtom() {
+			@Override
+			public boolean run() throws SQLException {
+				try {
+					CustomerPoint model = new CustomerPoint();
+			        model.setCustomerId(customerId);
+			        model.setAmount(amount);
+			        model.setType(1);
+			        model.setSource(source);
+			        model.setRelateId(relateId);
+			        model.setNote(note);
+			        model.setCreatedAt(new Date());
+			        model.setUpdatedAt(new Date());
+			        model.save();
+			        
+			        changeCustomerPoint(customerId, amount);
+				} catch (Exception e) {
+					Log.error(e.getMessage() + ",获取积分失败");
+					return false;
+				}
+				return true;
+			}
+		});
+        
+        return success ? ServiceCode.Success : ServiceCode.Failed;
+    }
+
+    /**
+     * 获取金币
+     * @param customerId 
+     * @param source 
+     * @param relateId 
+     * @return
+     */
+    public static ServiceCode gainGold(final int customerId, final int source, final int relateId, final double total) {
+    	CustomerPointRule rule = CustomerPointRule.dao.findFirst("select * from customer_point_rule where code = ?", source);
+        
+        if (rule == null) {
+			return ServiceCode.Failed;
+		}
+        
+        final int amount = (int)total / rule.getOriginal().intValue() * rule.getTarget().intValue();
+        final String note = rule.getNote();
+        
+        boolean success = Db.tx(new IAtom() {
+			
+			@Override
+			public boolean run() throws SQLException {
+				try {
+					CustomerGold model = new CustomerGold();
+			        model.setCustomerId(customerId);
+			        model.setAmount(amount);
+			        model.setType(1);
+			        model.setSource(source);
+			        model.setRelateId(relateId);
+			        model.setNote(note);
+			        model.setCreatedAt(new Date());
+			        model.setUpdatedAt(new Date());
+			        model.save();
+			        
+			        changeCustomerGold(customerId, amount);
+				} catch (Exception e) {
+					Log.error(e.getMessage() + ",获取金币失败");
+					return false;
+				}
+				return true;
+			}
+		});
+        
+        return success ? ServiceCode.Success : ServiceCode.Failed;
+    }
+
+    /**
+     * 获取成长值
+     * @param customerId 
+     * @param source 
+     * @param relateId 
+     * @return
+     */
+    public static ServiceCode gainGrowth(final int customerId, final int source, final int relateId, final double total) {
+    	CustomerPointRule rule = CustomerPointRule.dao.findFirst("select * from customer_point_rule where code = ?", source);
+        
+        if (rule == null) {
+			return ServiceCode.Failed;
+		}
+        
+        final int amount = (int)total / rule.getOriginal().intValue() * rule.getTarget().intValue();
+        final String note = rule.getNote();
+        
+        boolean success = Db.tx(new IAtom() {
+			
+			@Override
+			public boolean run() throws SQLException {
+				try {
+					CustomerGrowth model = new CustomerGrowth();
+			        model.setCustomerId(customerId);
+			        model.setAmount(amount);
+			        model.setType(1);
+			        model.setSource(source);
+			        model.setRelateId(relateId);
+			        model.setNote(note);
+			        model.setCreatedAt(new Date());
+			        model.setUpdatedAt(new Date());
+			        model.save();
+			        
+			        changeCustomerGrowth(customerId, amount);
+			        changeCustomerGrade(customerId);
+				} catch (Exception e) {
+					Log.error(e.getMessage() + ",获取成长值失败");
+					return false;
+				}
+				return true;
+			}
+		});
+        
+        return success ? ServiceCode.Success : ServiceCode.Failed;
+    }
+
+    /**
+     * 消费积分
+     * @param customerId
+     * @param amount
+     * @param source
+     * @param relateId
+     * @param note
+     * @return
+     */
+    public static ServiceCode expansePoint(final int customerId, final int amount, final int source, final int relateId, final String note) {
+        if (!checkPoint(customerId, amount)) {
+        	return ServiceCode.Validation;
+        }
+    	
+    	boolean success = Db.tx(new IAtom() {
+			
+			@Override
+			public boolean run() throws SQLException {
+				try {
+					CustomerPoint model = new CustomerPoint();
+			        model.setCustomerId(customerId);
+			        model.setAmount(amount * -1);
+			        model.setType(2);
+			        model.setSource(source);
+			        model.setRelateId(relateId);
+			        model.setNote(note);
+			        model.setCreatedAt(new Date());
+			        model.setUpdatedAt(new Date());
+			        model.save();
+			        
+			        changeCustomerPoint(customerId, amount * -1);
+				} catch (Exception e) {
+					Log.error(e.getMessage() + ",抵扣积分失败");
+					return false;
+				}
+				return true;
+			}
+		});
+        
+        return success ? ServiceCode.Success : ServiceCode.Failed;
+    }
+    
+    /**
+     * 检测消费的积分是否满足条件
+     * @param customerId
+     * @param amount
+     * @return
+     */
+    private static boolean checkPoint(int customerId, int amount) {
+    	Customer customer = Customer.dao.findById(customerId);
+    	int points = customer.getPoints();
+    	return points >= amount && amount != 0;
+    }
+
+    /**
+     * 消费金币
+     * @param customerId 
+     * @param amount 
+     * @param source 
+     * @param relateId 
+     * @param note
+     * @return
+     */
+    public static ServiceCode expanseGold(final int customerId, final int amount, final int source, final int relateId, final String note) {
+    	if (!checkGold(customerId, amount)) {
+    		return ServiceCode.Validation;
+    	}
+    	
+    	boolean success = Db.tx(new IAtom() {
+			
+			@Override
+			public boolean run() throws SQLException {
+				try {
+					CustomerGold model = new CustomerGold();
+			        model.setCustomerId(customerId);
+			        model.setAmount(amount * -1);
+			        model.setType(2);
+			        model.setSource(source);
+			        model.setRelateId(relateId);
+			        model.setNote(note);
+			        model.setCreatedAt(new Date());
+			        model.setUpdatedAt(new Date());
+			        model.save();
+			        
+			        changeCustomerGold(customerId, amount * -1);
+				} catch (Exception e) {
+					Log.error(e.getMessage() + ",抵扣积分失败");
+					return false;
+				}
+				return true;
+			}
+		});
+    	
+    	return success ? ServiceCode.Success : ServiceCode.Failed;
+    }
+    
+    /**
+     * 检测消费的金币是否满足条件
+     * @param customerId
+     * @param amount
+     * @return
+     */
+    private static boolean checkGold(int customerId, int amount) {
+    	Customer customer = Customer.dao.findById(customerId);
+    	int golds = customer.getGolds();
+    	return golds >= amount;
+    }
+
+    /**
+     * 消费成长值
+     * @param customerId
+     * @param amount
+     * @param source
+     * @param relateId
+     * @param note
+     * @return
+     */
+    public static ServiceCode expanseGrowth(final int customerId, final int amount, final int source, final int relateId, final String note) {
+    	if (!checkGrowth(customerId, amount)) {
+    		return ServiceCode.Validation;
+    	}
+    	
+    	boolean success = Db.tx(new IAtom() {
+			
+			@Override
+			public boolean run() throws SQLException {
+				try {
+					CustomerGold model = new CustomerGold();
+			        model.setCustomerId(customerId);
+			        model.setAmount(amount * -1);
+			        model.setType(2);
+			        model.setSource(source);
+			        model.setRelateId(relateId);
+			        model.setNote(note);
+			        model.setCreatedAt(new Date());
+			        model.setUpdatedAt(new Date());
+			        model.save();
+			        
+			        changeCustomerGrowth(customerId, amount * -1);
+			        changeCustomerGrade(customerId);
+				} catch (Exception e) {
+					Log.error(e.getMessage() + ",抵扣积分失败");
+					return false;
+				}
+				return true;
+			}
+		});
+    	
+    	return success ? ServiceCode.Success : ServiceCode.Failed;
+    }
+    
+    /**
+     * 检测消费的成长值是否满足条件
+     * @param customerId
+     * @param amount
+     * @return
+     */
+    private static boolean checkGrowth(int customerId, int amount) {
+    	Customer customer = Customer.dao.findById(customerId);
+    	int growths = customer.getGrowths();
+    	return growths >= amount;
+    }
+    
+    /**
+	 * 改变顾客的积分
+	 * @param customerId
+	 * @param amount
+	 */
+	protected static void changeCustomerPoint(int customerId, int amount) {
+		Db.update("update customer set points=points+? where id=?", amount, customerId);
+	}
+	
+	/**
+	 * 改变顾客的成长值
+	 * @param customerId
+	 * @param amount
+	 */
+	protected static void changeCustomerGrowth(int customerId, int amount) {
+		Db.update("update customer set growths=growths+? where id=?", amount, customerId);
+	}
+	
+	/**
+	 * 改变顾客的金币
+	 * @param customerId
+	 * @param amount
+	 */
+	protected static void changeCustomerGold(int customerId, int amount) {
+		Db.update("update customer set golds=golds+? where id=?", amount, customerId);
+	}
+	
+	/**
+	 * 改变顾客的会员等级
+	 * @param customerId
+	 */
+	protected static void changeCustomerGrade(int customerId) {
+		Customer customer = Customer.dao.findById(customerId);
+		changeCustomerGrade(customerId, customer.getGrowths());
+	}
+	
+	/**
+	 * 改变顾客的会员等级
+	 * @param customerId
+	 * @param amount
+	 */
+	protected static void changeCustomerGrade(int customerId, int totalGrowth) {
+		CustomerGrade grade = CustomerGrade.dao.findFirst("select * from customer_grade where start <= ? and end >= ?", totalGrowth, totalGrowth);
+		if (grade != null) {
+			Db.update("update customer set grade=? where id=?", grade.getName(), customerId);
+		} else {
+			grade = CustomerGrade.dao.findFirst("select max(start) start from customer_grade");
+			if (grade != null && totalGrowth >= grade.getStart()) {
+				Db.update("update customer set grade=? where id=?", grade.getName(), customerId);
+			}
+		}
+	}
+
+}

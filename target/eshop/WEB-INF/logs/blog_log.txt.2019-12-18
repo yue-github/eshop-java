@@ -1,0 +1,267 @@
+2019-12-18 11:34:25,696 [C3P0PooledConnectionPoolManager[identityToken->1hgedj5a76e6jlzxicls6|39d7a8b]-AdminTaskTimer] [com.mchange.v2.async.ThreadPoolAsynchronousRunner] [WARN] - com.mchange.v2.async.ThreadPoolAsynchronousRunner$DeadlockDetector@4c892fd0 -- APPARENT DEADLOCK!!! Creating emergency threads for unassigned pending tasks!
+2019-12-18 11:34:25,852 [C3P0PooledConnectionPoolManager[identityToken->1hgedj5a76e6jlzxicls6|39d7a8b]-AdminTaskTimer] [com.mchange.v2.async.ThreadPoolAsynchronousRunner] [WARN] - com.mchange.v2.async.ThreadPoolAsynchronousRunner$DeadlockDetector@4c892fd0 -- APPARENT DEADLOCK!!! Complete Status: 
+	Managed Threads: 3
+	Active Threads: 3
+	Active Tasks: 
+		com.mchange.v2.resourcepool.BasicResourcePool$ScatteredAcquireTask@38c8450e
+			on thread: C3P0PooledConnectionPoolManager[identityToken->1hgedj5a76e6jlzxicls6|39d7a8b]-HelperThread-#0
+		com.mchange.v2.resourcepool.BasicResourcePool$ScatteredAcquireTask@3d3a0a68
+			on thread: C3P0PooledConnectionPoolManager[identityToken->1hgedj5a76e6jlzxicls6|39d7a8b]-HelperThread-#1
+		com.mchange.v2.resourcepool.BasicResourcePool$ScatteredAcquireTask@69a4576a
+			on thread: C3P0PooledConnectionPoolManager[identityToken->1hgedj5a76e6jlzxicls6|39d7a8b]-HelperThread-#2
+	Pending Tasks: 
+		com.mchange.v2.resourcepool.BasicResourcePool$ScatteredAcquireTask@31202f97
+		com.mchange.v2.resourcepool.BasicResourcePool$ScatteredAcquireTask@4b3afc88
+		com.mchange.v2.resourcepool.BasicResourcePool$ScatteredAcquireTask@263ec6cd
+		com.mchange.v2.resourcepool.BasicResourcePool$ScatteredAcquireTask@6deaca67
+		com.mchange.v2.resourcepool.BasicResourcePool$ScatteredAcquireTask@5d860cda
+		com.mchange.v2.resourcepool.BasicResourcePool$ScatteredAcquireTask@4144655e
+		com.mchange.v2.resourcepool.BasicResourcePool$1DestroyResourceTask@111ccb15
+		com.mchange.v2.resourcepool.BasicResourcePool$ScatteredAcquireTask@2a9e82a3
+Pool thread stack traces:
+	Thread[C3P0PooledConnectionPoolManager[identityToken->1hgedj5a76e6jlzxicls6|39d7a8b]-HelperThread-#0,5,RMI Runtime]
+		java.net.SocketInputStream.socketRead0(Native Method)
+		java.net.SocketInputStream.socketRead(SocketInputStream.java:116)
+		java.net.SocketInputStream.read(SocketInputStream.java:171)
+		java.net.SocketInputStream.read(SocketInputStream.java:141)
+		com.mysql.jdbc.util.ReadAheadInputStream.fill(ReadAheadInputStream.java:101)
+		com.mysql.jdbc.util.ReadAheadInputStream.readFromUnderlyingStreamIfNecessary(ReadAheadInputStream.java:144)
+		com.mysql.jdbc.util.ReadAheadInputStream.read(ReadAheadInputStream.java:174)
+		com.mysql.jdbc.MysqlIO.readFully(MysqlIO.java:3001)
+		com.mysql.jdbc.MysqlIO.reuseAndReadPacket(MysqlIO.java:3462)
+		com.mysql.jdbc.MysqlIO.reuseAndReadPacket(MysqlIO.java:3452)
+		com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:3893)
+		com.mysql.jdbc.MysqlIO.sendCommand(MysqlIO.java:2526)
+		com.mysql.jdbc.MysqlIO.sqlQueryDirect(MysqlIO.java:2673)
+		com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.java:2545)
+		com.mysql.jdbc.ConnectionImpl.setupServerForTruncationChecks(ConnectionImpl.java:5169)
+		com.mysql.jdbc.ConnectionImpl.initializePropsFromServer(ConnectionImpl.java:3443)
+		com.mysql.jdbc.ConnectionImpl.connectOneTryOnly(ConnectionImpl.java:2297)
+		com.mysql.jdbc.ConnectionImpl.createNewIO(ConnectionImpl.java:2083)
+		com.mysql.jdbc.ConnectionImpl.<init>(ConnectionImpl.java:806)
+		com.mysql.jdbc.JDBC4Connection.<init>(JDBC4Connection.java:47)
+		sun.reflect.GeneratedConstructorAccessor12.newInstance(Unknown Source)
+		sun.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)
+		java.lang.reflect.Constructor.newInstance(Constructor.java:423)
+		com.mysql.jdbc.Util.handleNewInstance(Util.java:404)
+		com.mysql.jdbc.ConnectionImpl.getInstance(ConnectionImpl.java:410)
+		com.mysql.jdbc.NonRegisteringDriver.connect(NonRegisteringDriver.java:328)
+		com.mchange.v2.c3p0.DriverManagerDataSource.getConnection(DriverManagerDataSource.java:172)
+		com.mchange.v2.c3p0.WrapperConnectionPoolDataSource.getPooledConnection(WrapperConnectionPoolDataSource.java:220)
+		com.mchange.v2.c3p0.WrapperConnectionPoolDataSource.getPooledConnection(WrapperConnectionPoolDataSource.java:206)
+		com.mchange.v2.c3p0.impl.C3P0PooledConnectionPool$1PooledConnectionResourcePoolManager.acquireResource(C3P0PooledConnectionPool.java:200)
+		com.mchange.v2.resourcepool.BasicResourcePool.doAcquire(BasicResourcePool.java:1086)
+		com.mchange.v2.resourcepool.BasicResourcePool.doAcquireAndDecrementPendingAcquiresWithinLockOnSuccess(BasicResourcePool.java:1073)
+		com.mchange.v2.resourcepool.BasicResourcePool.access$800(BasicResourcePool.java:44)
+		com.mchange.v2.resourcepool.BasicResourcePool$ScatteredAcquireTask.run(BasicResourcePool.java:1814)
+		com.mchange.v2.async.ThreadPoolAsynchronousRunner$PoolThread.run(ThreadPoolAsynchronousRunner.java:696)
+	Thread[C3P0PooledConnectionPoolManager[identityToken->1hgedj5a76e6jlzxicls6|39d7a8b]-HelperThread-#1,5,RMI Runtime]
+		java.net.SocketInputStream.socketRead0(Native Method)
+		java.net.SocketInputStream.socketRead(SocketInputStream.java:116)
+		java.net.SocketInputStream.read(SocketInputStream.java:171)
+		java.net.SocketInputStream.read(SocketInputStream.java:141)
+		com.mysql.jdbc.util.ReadAheadInputStream.fill(ReadAheadInputStream.java:101)
+		com.mysql.jdbc.util.ReadAheadInputStream.readFromUnderlyingStreamIfNecessary(ReadAheadInputStream.java:144)
+		com.mysql.jdbc.util.ReadAheadInputStream.read(ReadAheadInputStream.java:174)
+		com.mysql.jdbc.MysqlIO.readFully(MysqlIO.java:3001)
+		com.mysql.jdbc.MysqlIO.reuseAndReadPacket(MysqlIO.java:3462)
+		com.mysql.jdbc.MysqlIO.reuseAndReadPacket(MysqlIO.java:3452)
+		com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:3893)
+		com.mysql.jdbc.MysqlIO.sendCommand(MysqlIO.java:2526)
+		com.mysql.jdbc.MysqlIO.sqlQueryDirect(MysqlIO.java:2673)
+		com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.java:2545)
+		com.mysql.jdbc.ConnectionImpl.setupServerForTruncationChecks(ConnectionImpl.java:5169)
+		com.mysql.jdbc.ConnectionImpl.initializePropsFromServer(ConnectionImpl.java:3443)
+		com.mysql.jdbc.ConnectionImpl.connectOneTryOnly(ConnectionImpl.java:2297)
+		com.mysql.jdbc.ConnectionImpl.createNewIO(ConnectionImpl.java:2083)
+		com.mysql.jdbc.ConnectionImpl.<init>(ConnectionImpl.java:806)
+		com.mysql.jdbc.JDBC4Connection.<init>(JDBC4Connection.java:47)
+		sun.reflect.GeneratedConstructorAccessor12.newInstance(Unknown Source)
+		sun.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)
+		java.lang.reflect.Constructor.newInstance(Constructor.java:423)
+		com.mysql.jdbc.Util.handleNewInstance(Util.java:404)
+		com.mysql.jdbc.ConnectionImpl.getInstance(ConnectionImpl.java:410)
+		com.mysql.jdbc.NonRegisteringDriver.connect(NonRegisteringDriver.java:328)
+		com.mchange.v2.c3p0.DriverManagerDataSource.getConnection(DriverManagerDataSource.java:172)
+		com.mchange.v2.c3p0.WrapperConnectionPoolDataSource.getPooledConnection(WrapperConnectionPoolDataSource.java:220)
+		com.mchange.v2.c3p0.WrapperConnectionPoolDataSource.getPooledConnection(WrapperConnectionPoolDataSource.java:206)
+		com.mchange.v2.c3p0.impl.C3P0PooledConnectionPool$1PooledConnectionResourcePoolManager.acquireResource(C3P0PooledConnectionPool.java:200)
+		com.mchange.v2.resourcepool.BasicResourcePool.doAcquire(BasicResourcePool.java:1086)
+		com.mchange.v2.resourcepool.BasicResourcePool.doAcquireAndDecrementPendingAcquiresWithinLockOnSuccess(BasicResourcePool.java:1073)
+		com.mchange.v2.resourcepool.BasicResourcePool.access$800(BasicResourcePool.java:44)
+		com.mchange.v2.resourcepool.BasicResourcePool$ScatteredAcquireTask.run(BasicResourcePool.java:1814)
+		com.mchange.v2.async.ThreadPoolAsynchronousRunner$PoolThread.run(ThreadPoolAsynchronousRunner.java:696)
+	Thread[C3P0PooledConnectionPoolManager[identityToken->1hgedj5a76e6jlzxicls6|39d7a8b]-HelperThread-#2,5,RMI Runtime]
+		java.net.SocketInputStream.socketRead0(Native Method)
+		java.net.SocketInputStream.socketRead(SocketInputStream.java:116)
+		java.net.SocketInputStream.read(SocketInputStream.java:171)
+		java.net.SocketInputStream.read(SocketInputStream.java:141)
+		com.mysql.jdbc.util.ReadAheadInputStream.fill(ReadAheadInputStream.java:101)
+		com.mysql.jdbc.util.ReadAheadInputStream.readFromUnderlyingStreamIfNecessary(ReadAheadInputStream.java:144)
+		com.mysql.jdbc.util.ReadAheadInputStream.read(ReadAheadInputStream.java:174)
+		com.mysql.jdbc.MysqlIO.readFully(MysqlIO.java:3001)
+		com.mysql.jdbc.MysqlIO.reuseAndReadPacket(MysqlIO.java:3462)
+		com.mysql.jdbc.MysqlIO.reuseAndReadPacket(MysqlIO.java:3452)
+		com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:3893)
+		com.mysql.jdbc.MysqlIO.sendCommand(MysqlIO.java:2526)
+		com.mysql.jdbc.MysqlIO.sqlQueryDirect(MysqlIO.java:2673)
+		com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.java:2545)
+		com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.java:2503)
+		com.mysql.jdbc.StatementImpl.executeQuery(StatementImpl.java:1369)
+		com.mysql.jdbc.ConnectionImpl.getTransactionIsolation(ConnectionImpl.java:3064)
+		com.mchange.v2.c3p0.impl.NewPooledConnection.<init>(NewPooledConnection.java:120)
+		com.mchange.v2.c3p0.WrapperConnectionPoolDataSource.getPooledConnection(WrapperConnectionPoolDataSource.java:236)
+		com.mchange.v2.c3p0.WrapperConnectionPoolDataSource.getPooledConnection(WrapperConnectionPoolDataSource.java:206)
+		com.mchange.v2.c3p0.impl.C3P0PooledConnectionPool$1PooledConnectionResourcePoolManager.acquireResource(C3P0PooledConnectionPool.java:200)
+		com.mchange.v2.resourcepool.BasicResourcePool.doAcquire(BasicResourcePool.java:1086)
+		com.mchange.v2.resourcepool.BasicResourcePool.doAcquireAndDecrementPendingAcquiresWithinLockOnSuccess(BasicResourcePool.java:1073)
+		com.mchange.v2.resourcepool.BasicResourcePool.access$800(BasicResourcePool.java:44)
+		com.mchange.v2.resourcepool.BasicResourcePool$ScatteredAcquireTask.run(BasicResourcePool.java:1814)
+		com.mchange.v2.async.ThreadPoolAsynchronousRunner$PoolThread.run(ThreadPoolAsynchronousRunner.java:696)
+
+2019-12-18 12:12:09,348 [http-nio-8765-exec-7] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [433c5aac-27a1-45a6-b771-431ab0625c85], using default.
+2019-12-18 12:12:14,923 [http-nio-8765-exec-4] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [7245f9f3-a693-42c0-84b2-7e83332790e7], using default.
+2019-12-18 12:12:14,986 [http-nio-8765-exec-4] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [8223], using default.
+2019-12-18 12:12:57,385 [http-nio-8765-exec-2] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [220226ef-1c72-40b6-b6d3-f4ba9644ed5b], using default.
+2019-12-18 12:18:30,562 [http-nio-8765-exec-1] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [f86e7f7f-0ab1-4092-b17e-1eed78390d6e], using default.
+2019-12-18 12:18:38,763 [http-nio-8765-exec-16] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [8d4a3689-c64a-4597-bac6-586a4a6de0c2], using default.
+2019-12-18 12:21:24,703 [http-nio-8765-exec-9] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [customerGold], using default.
+2019-12-18 12:21:24,736 [http-nio-8765-exec-9] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [json], using default.
+2019-12-18 12:21:24,762 [http-nio-8765-exec-9] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [gold], using default.
+2019-12-18 12:21:24,873 [http-nio-8765-exec-9] [Log] [INFO] - 提交订单时间=8142
+2019-12-18 12:21:24,873 [http-nio-8765-exec-9] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [couponId], using default.
+2019-12-18 12:24:40,941 [http-nio-8765-exec-14] [Log] [INFO] - 提交订单时间=28782
+2019-12-18 12:24:42,451 [http-nio-8765-exec-4] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /eshop/
+2019-12-18 14:02:02,542 [http-nio-8765-exec-2] [com.jfinal.core.ActionHandler] [ERROR] - /pc/product/whetherCollection
+java.lang.NullPointerException
+	at com.eshop.controller.pc.ProductController.whetherCollection(ProductController.java:121)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at com.jfinal.aop.Invocation.invoke(Invocation.java:73)
+	at com.eshop.interceptor.RequestInterceptor.intercept(RequestInterceptor.java:51)
+	at com.jfinal.aop.Invocation.invoke(Invocation.java:67)
+	at com.jfinal.core.ActionHandler.handle(ActionHandler.java:74)
+	at com.jfinal.core.JFinalFilter.doFilter(JFinalFilter.java:72)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)
+	at com.thetransactioncompany.cors.CORSFilter.doFilter(CORSFilter.java:198)
+	at com.thetransactioncompany.cors.CORSFilter.doFilter(CORSFilter.java:244)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:199)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:96)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:490)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:139)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:92)
+	at org.apache.catalina.valves.AbstractAccessLogValve.invoke(AbstractAccessLogValve.java:668)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:343)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:408)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:66)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:770)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1415)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:49)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.lang.Thread.run(Thread.java:748)
+2019-12-18 14:02:02,542 [http-nio-8765-exec-14] [com.jfinal.core.ActionHandler] [ERROR] - /pc/coupon/productCoupons
+java.lang.NullPointerException
+	at com.eshop.controller.pc.CouponController.productCoupons(CouponController.java:578)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at com.jfinal.aop.Invocation.invoke(Invocation.java:73)
+	at com.eshop.interceptor.RequestInterceptor.intercept(RequestInterceptor.java:51)
+	at com.jfinal.aop.Invocation.invoke(Invocation.java:67)
+	at com.jfinal.core.ActionHandler.handle(ActionHandler.java:74)
+	at com.jfinal.core.JFinalFilter.doFilter(JFinalFilter.java:72)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)
+	at com.thetransactioncompany.cors.CORSFilter.doFilter(CORSFilter.java:198)
+	at com.thetransactioncompany.cors.CORSFilter.doFilter(CORSFilter.java:244)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:199)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:96)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:490)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:139)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:92)
+	at org.apache.catalina.valves.AbstractAccessLogValve.invoke(AbstractAccessLogValve.java:668)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:343)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:408)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:66)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:770)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1415)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:49)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.lang.Thread.run(Thread.java:748)
+2019-12-18 14:02:03,264 [http-nio-8765-exec-14] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [a63b8bcf-e1f9-4524-999c-d965789e9b0e], using default.
+2019-12-18 14:02:03,693 [http-nio-8765-exec-17] [com.jfinal.core.ActionHandler] [ERROR] - /pc/customerLook/createLook
+com.jfinal.render.RenderException: java.io.FileNotFoundException: Template /pc/customerLook/createLook.html not found.
+	at com.jfinal.render.FreeMarkerRender.render(FreeMarkerRender.java:147)
+	at com.jfinal.core.ActionHandler.handle(ActionHandler.java:97)
+	at com.jfinal.core.JFinalFilter.doFilter(JFinalFilter.java:72)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)
+	at com.thetransactioncompany.cors.CORSFilter.doFilter(CORSFilter.java:198)
+	at com.thetransactioncompany.cors.CORSFilter.doFilter(CORSFilter.java:244)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:199)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:96)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:490)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:139)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:92)
+	at org.apache.catalina.valves.AbstractAccessLogValve.invoke(AbstractAccessLogValve.java:668)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:343)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:408)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:66)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:770)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1415)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:49)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.lang.Thread.run(Thread.java:748)
+Caused by: java.io.FileNotFoundException: Template /pc/customerLook/createLook.html not found.
+	at freemarker.template.Configuration.getTemplate(Configuration.java:441)
+	at freemarker.template.Configuration.getTemplate(Configuration.java:404)
+	at com.jfinal.render.FreeMarkerRender.render(FreeMarkerRender.java:143)
+	... 25 more
+2019-12-18 14:02:12,406 [http-nio-8765-exec-4] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [dd28b8c8-7e2f-48fa-b0a0-e4a5b660ed5d], using default.
+2019-12-18 15:23:29,604 [http-nio-8765-exec-14] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [d93616a3-1799-456f-917e-26a1b2508262], using default.
+2019-12-18 15:23:39,788 [http-nio-8765-exec-1] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [571bf2fe-3720-4a43-b37f-148597648b50], using default.
+2019-12-18 15:24:03,019 [http-nio-8765-exec-21] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [c0efae11-7fa1-4b05-87f7-9e8f2bbaf49b], using default.
+2019-12-18 15:27:25,534 [http-nio-8765-exec-23] [Log] [INFO] - 提交订单时间=5568
+2019-12-18 15:27:27,061 [http-nio-8765-exec-4] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /eshop/
+2019-12-18 15:30:26,831 [http-nio-8765-exec-3] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [571bf2fe-3720-4a43-b37f-148597648b50], using default.
+2019-12-18 15:38:02,093 [http-nio-8765-exec-7] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [0f402a8d-2454-405f-a25d-caf92941bd93], using default.
+2019-12-18 15:43:09,156 [http-nio-8765-exec-7] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [398e7c13-8834-4d08-b580-4ed158425e6e], using default.
+2019-12-18 15:43:10,301 [http-nio-8765-exec-7] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [8223], using default.
+2019-12-18 15:43:34,367 [http-nio-8765-exec-8] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/test
+2019-12-18 15:44:00,016 [http-nio-8765-exec-3] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/test
+2019-12-18 15:44:55,491 [http-nio-8765-exec-7] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/test
+2019-12-18 17:39:17,058 [http-nio-8765-exec-5] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [4668bdf8-1876-4a55-b6d3-e78841af9d53], using default.
+2019-12-18 17:39:28,836 [http-nio-8765-exec-10] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [ad656ba4-8d56-472c-b7d6-73167689fc59], using default.
+2019-12-18 17:39:28,948 [http-nio-8765-exec-10] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [8223], using default.
+2019-12-18 17:39:31,913 [http-nio-8765-exec-1] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [3b56e13f-39e5-4ff8-9797-c1a13b77639d], using default.
+2019-12-18 17:55:29,089 [http-nio-8765-exec-5] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [a403068f-79db-44c0-aa36-6c465f1866db], using default.
+2019-12-18 17:55:29,343 [http-nio-8765-exec-1] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/test
+2019-12-18 17:56:03,745 [http-nio-8765-exec-6] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [f42e8f1b-fc5c-4ff8-ad85-4ac8eca95505], using default.
+2019-12-18 17:57:50,615 [http-nio-8765-exec-5] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [10b0a700-3b1f-4da8-8722-3864e03dfc0a], using default.
+2019-12-18 17:59:33,888 [http-nio-8765-exec-10] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [e1119aa1-9cdb-4d4c-8f55-fa91f1a81d7d], using default.
+2019-12-18 18:00:05,473 [http-nio-8765-exec-6] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [b44f0fe3-4ca9-40fa-8c02-c720bb3d9968], using default.
+2019-12-18 18:00:51,432 [http-nio-8765-exec-7] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [28c89d6b-796b-4bd9-b738-dcf1702ce5f4], using default.
+2019-12-18 18:01:44,592 [http-nio-8765-exec-5] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [302fa4d8-2fa9-43ca-92f0-a1ac750e28c5], using default.
+2019-12-18 18:06:07,497 [http-nio-8765-exec-10] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [2461e2ff-99d2-40e5-94e4-950930672833], using default.
+2019-12-18 18:23:08,178 [http-nio-8765-exec-4] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [bc8b742d-df47-423b-b8eb-5ebc37202f54], using default.
+2019-12-18 18:53:46,301 [http-nio-8765-exec-10] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [6bbf6a1b-1811-49de-bb4b-320585071593], using default.
+2019-12-18 18:54:22,881 [http-nio-8765-exec-4] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [c1da101c-bb2b-4973-81ea-686a7e41e143], using default.

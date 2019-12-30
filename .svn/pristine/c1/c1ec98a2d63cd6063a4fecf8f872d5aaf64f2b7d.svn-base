@@ -1,0 +1,403 @@
+package com.eshop.controller.webapp;
+
+import java.math.BigDecimal;
+import java.util.*;
+
+import com.eshop.helper.CacheHelper;
+import com.eshop.helper.UnionpayHelper;
+import com.eshop.interceptor.CustomerWebAppAuthInterceptor;
+import com.eshop.log.Log;
+import com.eshop.model.Customer;
+import com.eshop.model.Order;
+import com.eshop.model.dao.BaseDao.ServiceCode;
+import com.eshop.service.Member;
+import com.jfinal.aop.Before;
+import com.jfinal.plugin.activerecord.Record;
+
+/**
+ *   我的订单控制器
+ *   @author TangYiFeng
+ */
+public class OrdersController extends WebappBaseController {
+
+    /**
+     * 构造方法
+     */
+    public OrdersController() {
+    }
+
+    /**
+     * 我的订单列表
+     * @param token 帐户访问口令（必填）
+     * @param offset 必填
+     * @param length 必填
+     * @param status 订单状态 选填
+     * @param order_code 订单号 选填
+     * @return 成功：{error:0, data:[{shop_id:店铺id,shopName:店铺名称,shopLogo:店铺logo,totalPayable:店铺订单总金额(包含运费),deliveryPrice:店铺订单运费,status:订单状态,order_code:订单号,productList:[{product_id:产品id,productName:产品名称,mainPic:产品主图,selectProterties:所选属性,unitOrdered:购买数量,actualUnitPrice:价格,totalPrice:总价},...]},...]}
+	 * 		       失败：{error:>0, errmsg:错误信息}
+     */
+    @Before(CustomerWebAppAuthInterceptor.class)
+    public void many() {
+    	String[] params = {"offset", "length"};
+    	if (!this.validate(params)) {
+    		return;
+    	}
+    	
+    	int offset = getParaToInt("offset");
+    	int length = getParaToInt("length");
+    	Integer status = getParaToIntegerDefault("status");
+    	status = (status != null && status != -1) ? status : null;
+    	String orderCode = getPara("order_code");
+    	
+    	String token = getPara("token");
+    	Customer customer = (Customer)CacheHelper.get(token);
+    	int customerId = customer.getId();
+    	
+    	List<Record> list = Member.findMermberOrderItems(offset, length, customerId, orderCode, null, status, null, null);
+    	int total = Member.countMermberOrderItems(customerId, orderCode, null, status, null, null);
+    	
+    	jsonObject.put("orders", list);
+    	jsonObject.put("offset", offset);
+    	jsonObject.put("length", length);
+    	jsonObject.put("totalRow", total);
+    	renderJson(jsonObject);
+    }
+    
+    /**
+     * 订单付款
+     * @param token
+     * @param orderId
+     * @return 成功：{error:0} 失败：{error:>0,errmsg:错误信息}
+     */
+    @Before(CustomerWebAppAuthInterceptor.class)
+    public void payOrder() {
+    	if (!this.validateRequiredString("orderId")) {
+    		return;
+    	}
+    	
+    	int orderId = getParaToInt("orderId");
+    	Order order = Order.dao.findById(orderId);
+    	
+    	if (order == null) {
+    		returnError(ErrorCode.Exception, "订单不存在");
+    		return;
+    	}
+    	
+    	if (order.getStatus() != 1) {
+    		returnError(ErrorCode.Exception, "订单状态不是1");
+    		return;
+    	}
+    	
+    	order.setStatus(2);
+    	if (!order.update()) {
+    		returnError(ErrorCode.Exception, "支付失败");
+    		return;
+    	}
+    	
+    	renderJson(jsonObject);
+    }
+    
+    /**
+     * 订单付款
+     * @param token
+     * @param tradeNo
+     * @return 成功：{error:0} 失败：{error:>0,errmsg:错误信息}
+     */
+    @Before(CustomerWebAppAuthInterceptor.class)
+    public void payOrderByTradeNo() {
+    	if (!this.validateRequiredString("tradeNo")) {
+    		return;
+    	}
+    	
+    	/*int tradeNo = getParaToInt("tradeNo");
+    	
+    	ServiceCode code = orderService.payOrderByTradeNo(tradeNo);
+    	
+    	if (code != ServiceCode.Success) {
+    		this.returnError(ErrorCode.Exception, "失败");
+    		return;
+    	}*/
+    	
+    	renderJson(jsonObject);
+    }
+    
+    /**
+     * 订单付款
+     * @param token
+     * @param orderCode
+     * @return 成功：{error:0} 失败：{error:>0,errmsg:错误信息}
+     */
+    @Before(CustomerWebAppAuthInterceptor.class)
+    public void payOrderByOrderCode() {
+    	if (!this.validateRequiredString("orderCode")) {
+    		return;
+    	}
+    	
+    	/*String orderCode = getPara("orderCode");
+    	
+    	ServiceCode code = orderService.payOrderByOrderCode(orderCode);
+    	
+    	if (code != ServiceCode.Success) {
+    		this.returnError(ErrorCode.Exception, "失败");
+    		return;
+    	}*/
+    	
+    	renderJson(jsonObject);
+    }
+    
+    /**
+     * 确认收货
+     * @param token
+     * @param orderId
+     * @return 成功：{error:0} 失败：{error:>0,errmsg:错误信息}
+     */
+    @Before(CustomerWebAppAuthInterceptor.class)
+    public void receive() {
+    	String[] params = {"orderId"};
+    	if (!this.validate(params)) {
+    		return;
+    	}
+    	
+    	int orderId = getParaToInt("orderId");
+    	
+    	ServiceCode code = Member.confirm(orderId);
+    	
+    	if(code != ServiceCode.Success) {
+    		setError(ErrorCode.Exception, "确认收货失败");
+    	}
+    	
+    	renderJson(jsonObject);
+    }
+    
+    /**
+     * 移除订单
+     * @param token 帐户访问口令（必填）
+     * @param orderId 订单ID（必填）
+     * @return 成功：{error: 0}；失败：{error: >0, errmsg: 错误信息}
+     */
+    @Before(CustomerWebAppAuthInterceptor.class)
+    public void remove() {
+    	String[] params = {"orderId"};
+    	if (!this.validate(params)) {
+    		return;
+    	}
+    	
+    	int orderId = getParaToInt("orderId");
+    	ServiceCode code = Member.deleteOrder(orderId);
+    	
+    	if(code != ServiceCode.Success) {
+    		setError(ErrorCode.Exception, "删除订单失败");
+    	}
+    	
+    	renderJson(jsonObject);
+    }
+    
+    /**
+     * 修改订单支付方式
+     * @param token
+     * @param orderId 订单id 必填
+     * @param payType 支付方式 必填
+     * @return 成功：{error: 0}；失败：{error: >0, errmsg: 错误信息}
+     */
+    @Before(CustomerWebAppAuthInterceptor.class)
+    public void editPaytype() {
+    	String[] params = {"orderId", "payType"};
+    	if (!this.validate(params)) {
+    		return;
+    	}
+    	
+    	int orderId = getParaToInt("orderId");
+    	int payType = getParaToInt("payType");
+    	
+    	ServiceCode code = Member.updatePayType(orderId, payType);
+    	
+    	if (code != ServiceCode.Success) {
+    		setError(ErrorCode.Exception, "修改支付方式失败");
+    	}
+    	
+    	renderJson(jsonObject);
+    }
+    
+    /**
+     * 余额支付
+     * @param token
+     * @param orderId
+     * @return 成功：{error:0, error:-1(余额不足)} 失败：{error:>0, errmsg:错误信息}
+     */
+    @Before(CustomerWebAppAuthInterceptor.class)
+    public void balancePay() {
+    	/*if (!this.validateRequiredString("orderId")) {
+    		return;
+    	}
+    	
+    	int orderId = getParaToInt("orderId");
+    	
+    	String token = getPara("token");
+    	Customer customer = (Customer) CacheHelper.get(token);
+    	int customerId = customer.getId();
+    	
+    	int code = orderService.balancePay(orderId, customerId);
+    	
+    	if (code == -1) {
+    		returnError(-1, "余额不足");
+    		return;
+    	}
+    	
+    	if (code != 0) {
+    		returnError(1, "支付失败");
+    		return;
+    	}
+    	
+    	renderJson(jsonObject);*/
+    }
+    
+    /**
+     * 银联支付
+     * @param token
+     * @param tradeCode 必填
+     * @return 成功：{error:0,payType:支付类型(1微信,2支付宝),payInfo:支付信息} 失败：{error:>0, errmsg:错误信息}
+     */
+    @Before(CustomerWebAppAuthInterceptor.class)
+    public void unionpay() {
+    	String[] params = {"tradeCode"};
+    	if (!this.validate(params)) {
+    		return;
+    	}
+    	
+    	String tradeCode = getPara("tradeCode");
+    	Order order = Member.getOrderByOrderCode(tradeCode);
+    	order.setOrderCode(order.getOrderCode()+"1");
+    	order.setCodeType(2);
+    	order.update();
+    	
+    	if (order == null) {
+    		returnError(ErrorCode.Exception, "订单不存在");
+    		return;
+    	}
+    	
+    	int payType = order.getPayType();
+    	int totalPayable = (order.getTotalPayable().multiply(new BigDecimal(100)).intValue());
+    	String payInfo = UnionpayHelper.getHtml(totalPayable + "", tradeCode);
+    	
+    	jsonObject.put("payInfo", payInfo);
+    	jsonObject.put("payType", payType);
+    	renderJson(jsonObject);
+    }
+    
+    /**
+     * 银联支付
+     * @param token
+     * @param orderId
+     * @return 成功：{error:0,payType:支付类型(1微信,2支付宝),payInfo:支付信息} 失败：{error:>0, errmsg:错误信息}
+     */
+    @Before(CustomerWebAppAuthInterceptor.class)
+    public void unionpayWithOrderCode() {
+    	/*if (!this.validateRequiredString("orderId")) {
+    		return;
+    	}
+    	int orderId = getParaToInt("orderId");
+    	
+    	Order order = (Order) Order.dao.findById(orderId);
+    	
+    	if (order == null) {
+    		returnError(ErrorCode.Exception, "订单不存在");
+    		return;
+    	}
+    	
+    	String orderCode = order.getOrderCode();
+    	double totalPayable = order.getTotalPayable().doubleValue();
+    	int totalPayInt = (int) (totalPayable * 100);
+    	
+    	String notifyUrl = getUnionpayNotifyUrlWithOrderCode();
+    	String payInfo = unionpayHelper.getHtml(totalPayInt + "", orderCode + "", frontUrl, notifyUrl);
+    	int payType = 3;
+    	
+    	jsonObject.put("payInfo", payInfo);
+    	jsonObject.put("payType", payType);
+    	renderJson(jsonObject);*/
+    }
+
+    /**
+     * 取消订单
+     * @param token 帐户访问口令（必填）
+     * @param orderId 订单ID（必填）
+     * @return 成功：{error: 0}；失败：{error: >0, errmsg: 错误信息}
+     */ 
+    public void cancel() {
+    	String[] params = {"orderId"};
+    	if (!this.validate(params)) {
+    		return;
+    	}
+    	
+    	int orderId = getParaToInt("orderId");
+    	String cancelReason = getPara("cancelReason");
+    	String cancelNote = getPara("cancelNote");
+    	ServiceCode code = Member.cancel(orderId, cancelReason, cancelNote);
+    	
+    	if(code != ServiceCode.Success) {
+    		setError(ErrorCode.Exception, "取消订单失败");
+    	}
+    	
+    	renderJson(jsonObject);
+    }
+    
+    /**
+     * 获取微信公众号支付参数
+     * @param token 帐户访问口令（必填）
+     * @param tradeCode 商户订单号（必填）
+     * @return 成功：{error: 0}；失败：{error: >0, errmsg: 错误信息}
+     */
+    @Before(CustomerWebAppAuthInterceptor.class)
+    public void getJsApiParameters() {
+    	try {
+    		if(!this.validateRequiredString("tradeCode")) {
+        		return;
+        	}
+    		String tradeCode = getPara("tradeCode");
+        	
+        	String token = this.getPara("token");
+        	Customer customer = (Customer)CacheHelper.get(token);
+    		Object data = Member.getJsApiParameters(customer.getWeiXinOpenId(), tradeCode, "127.0.0.1");
+    		
+    		jsonObject.put("data", data);
+        	jsonObject.put("error", 0);
+        	renderJson(jsonObject);
+    	} catch(Exception e) {
+    		Log.info("e="+e.getMessage());
+    		returnError(ErrorCode.Exception, e.getMessage());
+    	}
+    }
+    
+    /**
+     * 获取微信公众号支付参数
+     * @param token 帐户访问口令（必填）
+     * @param tradeCode 商户订单号（必填）
+     * @return 成功：{error: 0}；失败：{error: >0, errmsg: 错误信息}
+     */
+    @Before(CustomerWebAppAuthInterceptor.class)
+    public void getWxJsApiParameters() {
+    	String ip = this.getRequest().getRemoteAddr();
+    	try {
+    		if(!this.validateRequiredString("orderId")) {
+        		return;
+        	}
+    		int orderId = getParaToInt("orderId");
+    		
+    		Order order = Order.dao.findById(orderId);
+    		order.setOrderCode(order.getOrderCode() + "1");
+    		order.setCodeType(2);
+    		order.update();
+        	
+        	String token = this.getPara("token");
+        	Customer customer = (Customer)CacheHelper.get(token);
+    		Object data = Member.getJsApiParameters(customer.getWeiXinOpenId(), orderId, "127.0.0.1");
+    		
+    		jsonObject.put("data", data);
+        	jsonObject.put("error", 0);
+        	renderJson(jsonObject);
+    	} catch(Exception e) {
+    		returnError(ErrorCode.Exception, e.getMessage());
+    	}
+    }
+    
+}

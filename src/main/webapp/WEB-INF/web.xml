@@ -1,0 +1,60 @@
+<!DOCTYPE web-app PUBLIC
+ "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+ "http://java.sun.com/dtd/web-app_2_3.dtd" >
+
+<web-app>
+  <display-name>Archetype Created Web Application</display-name>
+  <filter>
+	<filter-name>CORS</filter-name>
+	<filter-class>com.thetransactioncompany.cors.CORSFilter</filter-class>
+	<init-param>
+		<param-name>cors.allowOrigin</param-name>
+		<param-value>*</param-value>
+	</init-param>
+	<init-param>
+		<param-name>cors.supportedMethods</param-name>
+		<param-value>GET, POST</param-value>
+	</init-param>
+	<init-param>
+		<param-name>cors.supportedHeaders</param-name>
+		<param-value>*</param-value>
+	</init-param>
+	<init-param>
+		<param-name>cors.exposedHeaders</param-name>
+		<param-value>Set-Cookie</param-value>
+	</init-param>
+	<init-param>
+		<param-name>cors.supportsCredentials</param-name>
+		<param-value>true</param-value>
+	</init-param>
+  </filter>
+  <filter>
+	<filter-name>jfinal</filter-name>
+	<filter-class>com.jfinal.core.JFinalFilter</filter-class>
+	<init-param>
+		<param-name>configClass</param-name>
+		<param-value>com.eshop.config.ProjectConfig</param-value>
+	</init-param>
+  </filter>
+  <filter-mapping>
+	<filter-name>CORS</filter-name>
+	<url-pattern>/*</url-pattern>
+  </filter-mapping>
+  <filter-mapping>
+	<filter-name>jfinal</filter-name>
+	<url-pattern>/*</url-pattern>
+  </filter-mapping>
+  <servlet>  
+	    <servlet-name>lo4jInit</servlet-name>  
+	    <servlet-class>com.eshop.config.Lo4jInit</servlet-class>  
+	    <init-param>  
+	        <param-name>log4j_init_path</param-name>  
+	        <param-value>WEB-INF/log4j.properties</param-value>  
+	    </init-param>  
+	    <init-param>  
+	        <param-name>log4j_file_path</param-name>  
+	        <param-value>WEB-INF/logs/</param-value>  
+	    </init-param>
+	    <load-on-startup>0</load-on-startup>  
+ </servlet>
+</web-app>

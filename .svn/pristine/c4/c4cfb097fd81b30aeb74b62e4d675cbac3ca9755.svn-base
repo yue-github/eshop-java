@@ -1,0 +1,173 @@
+package com.eshop.controller.webapp;
+
+import java.util.*;
+
+import com.alibaba.fastjson.JSON;
+import com.eshop.helper.CacheHelper;
+import com.eshop.interceptor.CustomerAuthInterceptor;
+import com.eshop.interceptor.CustomerPcAuthInterceptor;
+import com.eshop.interceptor.CustomerWebAppAuthInterceptor;
+import com.eshop.model.Customer;
+import com.eshop.model.dao.BaseDao.ServiceCode;
+import com.eshop.promotion.BasePromotion;
+import com.eshop.service.Member;
+import com.jfinal.aop.Before;
+import com.jfinal.plugin.activerecord.Record;
+import org.apache.xmlbeans.impl.xb.ltgfmt.Code;
+
+/**
+ * 购物车控制器
+ * @author TangYiFeng
+ */
+public class ShoppingCartController extends WebappBaseController {
+
+    /**
+     * 构造方法
+     */
+    public ShoppingCartController() {
+    }
+
+    /**
+     * 删除购物车
+     * @param token 帐户访问口令（必填）
+     * @param ids [1,2,...] 购物车id
+     * @return 成功：{error: 0}；失败：{error: >0, errmsg: 错误信息}
+     */
+    @Before(CustomerWebAppAuthInterceptor.class)
+    public void remove() {
+    	String[] params = {"id"};
+    	if (!this.validate(params)) {
+    		return;
+    	}
+    	
+    	int id = getParaToInt("id");
+    	ServiceCode code = Member.clearShoppingCart(id);
+        
+        if(code != ServiceCode.Success) {
+    		setError(ErrorCode.Exception, "删除购物车失败");
+    	}
+    	
+    	renderJson(jsonObject);
+    }
+    
+    /**
+     * 批量删除购物车
+     *  @param token 帐户访问口令（必填）
+     *  @param ids [1,2,...] 购物车id
+     *  @return 成功：{error: 0}；失败：{error: >0, errmsg: 错误信息}
+     */
+    @Before(CustomerPcAuthInterceptor.class)
+    public void removeMore() {
+    	String[] params = {"ids"};
+    	if (!this.validate(params)) {
+    		return;
+    	}
+        
+    	String idsStr = getPara("ids");
+    	List<Integer> ids = JSON.parseArray(idsStr, Integer.class);
+    	
+    	ServiceCode code = Member.batchClearShoppingCart(ids);
+    	if (code != ServiceCode.Success) {
+    		setError(ErrorCode.Exception, "批量删除购物车失败");
+    	}
+        
+    	renderJson(jsonObject);
+    }
+
+    /**
+     * 修改购物车数量
+     *  @param token 帐户访问口令（必填）
+     *  @param id 购物车id（必填）
+     *  @param amount 数量（必填）
+     *  @return 成功：{error: 0,error:-1(库存不足)}；失败：{error: >0, errmsg: 错误信息}
+     */
+    @Before(CustomerWebAppAuthInterceptor.class)
+    public void update() {
+    	String[] params = {"id", "amount"};
+    	if (!this.validate(params)) {
+    		return;
+    	}
+    	
+        int id = getParaToInt("id");
+        int amount = getParaToInt("amount");
+        ServiceCode code = Member.updateShoppingCartNum(id, amount);
+        
+        if(code == ServiceCode.Function) {
+    		returnError(-1, "库存不足");
+    		return;
+    	}
+        
+        if(code != ServiceCode.Success) {
+    		returnError(ErrorCode.Exception, "修改数量失败");
+    		return;
+    	}
+    	
+    	renderJson(jsonObject);
+    }
+    
+    /**
+     * 我的购物车列表
+     * @param token 帐户访问口令（必填）
+     * @return 成功：{error: 0, totalPrice:总金额, totalAmount:总购买数量, data:[{shop_id:店铺id,shopName:店铺名称,shopLogo:店铺logo,productList:[{id:购物车id,product_id:产品id,productName:产品名称,mainPic:产品主图,selectProterties:所选属性,amount:购买数量,suggestedRetailUnitPrice:产品单价,totalPrice:产品总价,isSelected:是否选中},...]}]}；失败：{error: >0, errmsg: 错误信息}
+     */
+    @Before(CustomerWebAppAuthInterceptor.class)
+    public void getMyShoppingCart() {
+    	String token = getPara("token");
+    	Customer customer = (Customer) CacheHelper.get(token);
+    	int customerId = customer.getId();
+    	
+    	List<Record> data = Member.findShoppingCartItems(customerId, null, null);
+    	List<Record> products = Member.getShoppingCartProducts(customerId, null, 1);
+        
+        double totalProdPrice = Member.calculateProductTotalPayable(products);
+        double totalAmount = Member.calculateProductTotalAmount(products);
+        double promDiscount = BasePromotion.calculateDiscount(products);
+        double totalPrice = totalProdPrice - promDiscount;
+    	
+    	jsonObject.put("totalPrice", totalPrice);
+    	jsonObject.put("totalAmount", totalAmount);
+    	jsonObject.put("totalProdPrice", totalProdPrice);
+    	jsonObject.put("promDiscount", promDiscount);
+    	jsonObject.put("data", data);
+    	renderJson(jsonObject);
+    }
+    
+    /**
+     * 选中购物车
+     * @param token
+     * @param ids [{id:1,selected:1},{id:2,selected:0},...]
+     * @return 成功：{error:0, data:{totalPrice:总金额, totalAmount:总数量}}
+     * 		       失败：{error:>0, errmsg:错误信息}	
+     */
+    @Before(CustomerWebAppAuthInterceptor.class)
+    public void selectShoppingCart() {
+    	if (!this.validateRequiredString("ids")) {
+    		return;
+    	}
+    	
+    	String ids = getPara("ids");
+    	ServiceCode code = Member.batchSelectedShoppingCart(ids);
+    	if (code != ServiceCode.Success) {
+    		returnError(ErrorCode.Exception, "选中购物车失败");
+    		return;
+    	}
+    	String token = getPara("token");
+    	Customer customer = (Customer) CacheHelper.get(token);
+    	int customerId = customer.getId();
+    	
+    	List<Record> products = Member.getShoppingCartProducts(customerId, null, 1);
+        
+        double totalProdPrice = Member.calculateProductTotalPayable(products);
+        double totalAmount = Member.calculateProductTotalAmount(products);
+        double promDiscount = BasePromotion.calculateDiscount(products);
+        double totalPrice = totalProdPrice - promDiscount;
+
+    	jsonObject.put("totalPrice", totalPrice);
+    	jsonObject.put("totalAmount", totalAmount);
+    	jsonObject.put("totalProdPrice", totalProdPrice);
+    	jsonObject.put("promDiscount", promDiscount);
+    	renderJson(jsonObject);
+    }
+
+
+}

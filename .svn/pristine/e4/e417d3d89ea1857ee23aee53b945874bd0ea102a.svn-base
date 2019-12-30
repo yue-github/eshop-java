@@ -1,0 +1,308 @@
+package com.eshop.helper;
+
+import java.io.UnsupportedEncodingException;
+import java.util.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.alipay.config.AlipayConfig;
+import com.alipay.util.AlipayNotify;
+import com.alipay.util.AlipaySubmit;
+import com.eshop.log.Log;
+import com.eshop.membership.MemberShip;
+import com.eshop.model.CustomerGold;
+import com.eshop.model.Order;
+import com.eshop.model.Shop;
+import com.eshop.model.Wallet;
+import com.eshop.model.dao.BaseDao;
+import com.eshop.service.Member;
+import com.jfinal.kit.PropKit;
+import com.jfinal.plugin.activerecord.Db;
+import com.alipay.api.*;
+import com.alipay.api.domain.AlipayTradeAppPayModel;
+import com.alipay.api.request.AlipayTradeAppPayRequest;
+import com.alipay.api.response.AlipayTradeAppPayResponse;
+import com.jfinal.plugin.activerecord.Record;
+import org.apache.commons.lang.StringUtils;
+
+/**
+ * 支付宝辅助类
+ *   @author TangYiFeng
+ */
+public class AlipayHelper {
+
+    /**
+     * 
+     * @param out_trade_no 商户订单号，商户网站订单系统中唯一订单号，必填
+     * @param subject 订单名称，必填
+     * @param total_fee 付款金额，必填
+     * @param body 商品描述，可空
+     * @return
+     */
+    public static String getUrl(String out_trade_no, String subject, String total_fee, String body) {
+		String notify_url = PropKit.use("callBackUrl.txt").get("apiHostName") + PropKit.use("callBackUrl.txt").get("aliPayNotifyUrl");
+		String return_url = PropKit.use("callBackUrl.txt").get("frontHostName") + PropKit.use("callBackUrl.txt").get("pcReturnUrl");
+		String sHtmlText = getUrl(out_trade_no, subject, total_fee, body, notify_url, return_url);
+		return sHtmlText;
+    }
+    
+    /**
+     * 
+     * @param out_trade_no
+     * @param subject
+     * @param total_fee
+     * @param body
+     * @param notify_url
+     * @param return_url
+     * @return
+     */
+    public static String getUrl(String out_trade_no, String subject, String total_fee, String body, String notify_url, String return_url) {
+		//把请求参数打包成数组
+		Map<String, String> sParaTemp = new HashMap<String, String>();
+		sParaTemp.put("service", AlipayConfig.service);
+        sParaTemp.put("partner", AlipayConfig.partner);
+        sParaTemp.put("seller_id", AlipayConfig.seller_id);
+        sParaTemp.put("_input_charset", AlipayConfig.input_charset);
+		sParaTemp.put("payment_type", AlipayConfig.payment_type);
+		sParaTemp.put("notify_url", notify_url);
+		sParaTemp.put("return_url", return_url);
+		sParaTemp.put("anti_phishing_key", AlipayConfig.anti_phishing_key);
+		sParaTemp.put("exter_invoke_ip", AlipayConfig.exter_invoke_ip);
+		sParaTemp.put("out_trade_no", out_trade_no);
+		sParaTemp.put("subject", subject);
+		sParaTemp.put("total_fee", total_fee);
+		sParaTemp.put("body", body);
+		//其他业务参数根据在线开发文档，添加参数.文档地址:https://doc.open.alipay.com/doc2/detail.htm?spm=a219a.7629140.0.0.O9yorI&treeId=62&articleId=103740&docType=1
+        //如sParaTemp.put("参数名","参数值");
+		
+		//建立请求
+		String sHtmlText = AlipaySubmit.buildRequest(sParaTemp,"get","确认");
+		
+		return sHtmlText;
+    }
+    
+    /**
+	 * 订单支付宝回调
+	 * @throws UnsupportedEncodingException 
+	 */
+	public static boolean alipayCallBack(HttpServletRequest request, HttpServletResponse response) throws UnsupportedEncodingException {
+		Map<String,String> params = new HashMap<String,String>();
+		
+		Map requestParams = request.getParameterMap();
+		
+		Log.info("******************out_trade_no:" + request.getParameter("out_trade_no"));
+		
+		//商户订单号
+		String out_trade_no = new String(request.getParameter("out_trade_no").getBytes("ISO-8859-1"),"UTF-8");
+		//支付宝交易号
+		String tradeNo = new String(request.getParameter("trade_no").getBytes("ISO-8859-1"),"UTF-8");
+		//交易状态
+		String trade_status = new String(request.getParameter("trade_status").getBytes("ISO-8859-1"),"UTF-8");
+		
+		for (Iterator iter = requestParams.keySet().iterator(); iter.hasNext();) {
+			String name = (String) iter.next();
+			String[] values = (String[]) requestParams.get(name);
+			String valueStr = "";
+			for (int i = 0; i < values.length; i++) {
+				valueStr = (i == values.length - 1) ? valueStr + values[i]
+						: valueStr + values[i] + ",";
+			}
+			//乱码解决，这段代码在出现乱码时使用。如果mysign和sign不相等也可以使用这段代码转化
+			//valueStr = new String(valueStr.getBytes("ISO-8859-1"), "gbk");
+			params.put(name, valueStr);
+		}
+		
+		
+
+		if(AlipayNotify.verify(params)){//验证成功
+			//////////////////////////////////////////////////////////////////////////////////////////
+			//请在这里加上商户的业务逻辑程序代码
+
+			//——请根据您的业务逻辑来编写程序（以下代码仅作参考）——
+			
+			if(trade_status.equals("TRADE_FINISHED")){
+				//判断该笔订单是否在商户网站中已经做过处理
+					//如果没有做过处理，根据订单号（out_trade_no）在商户网站的订单系统中查到该笔订单的详细，并执行商户的业务程序
+					//请务必判断请求时的total_fee、seller_id与通知时获取的total_fee、seller_id为一致的
+					//如果有做过处理，不执行商户的业务程序
+					
+				//注意：
+				//退款日期超过可退款期限后（如三个月可退款），支付宝系统发送该交易状态通知
+			} else if (trade_status.equals("TRADE_SUCCESS")){
+				//判断该笔订单是否在商户网站中已经做过处理
+					//如果没有做过处理，根据订单号（out_trade_no）在商户网站的订单系统中查到该笔订单的详细，并执行商户的业务程序
+					//请务必判断请求时的total_fee、seller_id与通知时获取的total_fee、seller_id为一致的
+					//如果有做过处理，不执行商户的业务程序
+					
+				//注意：
+				//付款完成后，支付宝系统发送该交易状态通知
+				if(out_trade_no != null && out_trade_no != "") {
+					List<Order> orders = Order.dao.find("select * from `order` where theSameOrderNum = ? or order_code = ?", out_trade_no, out_trade_no);
+					for (Order order : orders) {
+						if (order.getStatus() == BaseDao.UNPAY) {
+
+				    		Db.update("update `order` set status = ?, tradeNo = ?, payTime = ? where id = ?", BaseDao.PAYED, tradeNo, new Date(), order.getId());
+						}
+					}
+		    		//更新商品销售量和销售额
+		    		Member.updateProduct(out_trade_no);
+		    		//客户下单成功，通知商家
+		    		Shop shop = Member.getShopByOrderCode(out_trade_no);
+			    	Member.informShop(shop, "【乐驿商城】订单支付成功啦，请及时处理订单", "【乐驿商城】您有一笔订单支付成功提醒", "【乐驿商城】订单支付成功啦，请及时处理订单");
+				}
+
+ 			}
+
+			//——请根据您的业务逻辑来编写程序（以上代码仅作参考）——
+				
+			//out.print("success");	//请不要修改或删除
+				final JSONObject jsarr = JSON.parseObject(CacheHelper.get("json").toString());
+				CustomerGold customerGold = new CustomerGold();
+				customerGold.setCustomerId(jsarr.getIntValue("CustomerId"));
+				customerGold.setAmount(jsarr.getIntValue("Amount"));
+				customerGold.setType(jsarr.getIntValue("Type"));
+				customerGold.setNote(jsarr.getString("note"));
+				customerGold.setRelateId(jsarr.getIntValue("RelateId"));
+				customerGold.setCreatedAt(jsarr.getDate("CreatedAt"));
+				customerGold.setUpdatedAt(jsarr.getDate("UpdatedAt"));
+				customerGold.setSource(jsarr.getIntValue("Source"));
+				customerGold.save();
+				Record record = Db.findFirst("select * from customer where id =?",customerGold.getCustomerId());
+				if(record!=null){
+					Integer gold = Integer.valueOf(CacheHelper.get("gold").toString());
+					Integer count = record.getInt("golds");
+					count = count - gold+customerGold.getAmount();
+					Db.update("update customer set golds =? where id=?",count,customerGold.getCustomerId());
+				}
+			Integer cou = Integer.valueOf(CacheHelper.get("couponId").toString());
+			if(cou!=0){
+				Integer js = Integer.valueOf(CacheHelper.get("customerId").toString());
+				Integer couponId = Integer.valueOf(CacheHelper.get("couponId").toString());
+				Db.update("update customer_coupon set isUsed =? where customerId=? and couponId=?",1,js,couponId);
+			}
+			CacheHelper.remove("couponId");
+			CacheHelper.remove("json");
+			CacheHelper.remove("customerId");
+			return true;
+
+			//////////////////////////////////////////////////////////////////////////////////////////
+		}else{//验证失败
+			//out.print("fail");
+			return false;
+		}
+	}
+	
+	/**
+	 * 充值支付宝回调
+	 */
+	public static boolean alipayRechargeCallBack(Map requestParams, String out_trade_no, String trade_no, String trade_status) {
+		Map<String,String> params = new HashMap<String,String>();
+		
+		for (Iterator iter = requestParams.keySet().iterator(); iter.hasNext();) {
+			String name = (String) iter.next();
+			String[] values = (String[]) requestParams.get(name);
+			String valueStr = "";
+			for (int i = 0; i < values.length; i++) {
+				valueStr = (i == values.length - 1) ? valueStr + values[i]
+						: valueStr + values[i] + ",";
+			}
+			//乱码解决，这段代码在出现乱码时使用。如果mysign和sign不相等也可以使用这段代码转化
+			//valueStr = new String(valueStr.getBytes("ISO-8859-1"), "gbk");
+			params.put(name, valueStr);
+		}
+
+		if(AlipayNotify.verify(params)){//验证成功
+			//////////////////////////////////////////////////////////////////////////////////////////
+			//请在这里加上商户的业务逻辑程序代码
+
+			//——请根据您的业务逻辑来编写程序（以下代码仅作参考）——
+			
+			if(trade_status.equals("TRADE_FINISHED")){
+				//判断该笔订单是否在商户网站中已经做过处理
+					//如果没有做过处理，根据订单号（out_trade_no）在商户网站的订单系统中查到该笔订单的详细，并执行商户的业务程序
+					//请务必判断请求时的total_fee、seller_id与通知时获取的total_fee、seller_id为一致的
+					//如果有做过处理，不执行商户的业务程序
+					
+				//注意：
+				//退款日期超过可退款期限后（如三个月可退款），支付宝系统发送该交易状态通知
+			} else if (trade_status.equals("TRADE_SUCCESS")){
+				//判断该笔订单是否在商户网站中已经做过处理
+					//如果没有做过处理，根据订单号（out_trade_no）在商户网站的订单系统中查到该笔订单的详细，并执行商户的业务程序
+					//请务必判断请求时的total_fee、seller_id与通知时获取的total_fee、seller_id为一致的
+					//如果有做过处理，不执行商户的业务程序
+					
+				//注意：
+				//付款完成后，支付宝系统发送该交易状态通知
+				Wallet wallet = Wallet.dao.findFirst("select * from wallet where tradeNo = ?", out_trade_no);
+				if (wallet != null) {
+					wallet.setFinishTime(new Date());
+					wallet.setUpdatedAt(new Date());
+					wallet.setIsPaySuccess(1);
+					wallet.setTransactionId(trade_no);
+					wallet.update();
+				}
+ 			}
+
+			//——请根据您的业务逻辑来编写程序（以上代码仅作参考）——
+				
+			//out.print("success");	//请不要修改或删除
+			return true;
+
+			//////////////////////////////////////////////////////////////////////////////////////////
+		}else{//验证失败
+			//out.print("fail");
+			return false;
+		}
+	}
+    
+    
+    private static final String APPID = "2016112803459053";
+    private static final String APP_PRIVATE_KEY = "MIICdQIBADANBgkqhkiG9w0BAQEFAASCAl8wggJbAgEAAoGBAL2F/3ZJbWVybaCs" +
+            "gfVnjRqTWvO+DW4wQ5YP8r9g81nZ0TUMAx5xBfc2gtKb51zeRWHWvaW4JyttrBMY" +
+            "i9ag2l7JBSz3io+uyJBWbqx2BTS+LdwbmuuSk+ZyZ2QuRMGIc5rzTlzpXjtot8Oq" +
+            "cWZXjRf76By55aoG+dGW16EHlRYpAgMBAAECgYAq3mxybRl5oPB7L4oV4F5ibIJe" +
+            "L9cJ3ZDsGJ9n+p4Q7NwNi7II6LfYu1PMH8etkflPsCslmQoDIMOTbjHzUl8SPcEm" +
+            "izpiPbkejwSZpmzg63EKqfwMmtgSVYylNGQnGGo1TwWJogUQkQZnQi1CcT/djj2v" +
+            "pBVxj8OijZelhWPPoQJBAOoSrRhYl/SMiN8m/ISp7u2Z4e7i6lJTVBEmKoKxbdRN" +
+            "B3NevLcXb69dOqsNi3j0r4JAU6fYl2q7J/mUEsA1WSsCQQDPRvnJWczCdzky+ivQ" +
+            "o61JbeEd0gCUTrZXU0ajigKqmHRkzwKR5t88njnTPaUD228ATMc+cu7gZz1rE2ye" +
+            "zXv7AkAIK/6/CtjDQOTGZaYLO6OLyAOLQ4DKvv4AW0TAq1EaSFYqQPR1r+vGQ4r4" +
+            "zdBAuMon0fcZtQYUQ9Rxcin1a+dhAkA8IiYzYQcDX91LScLOW73ZMLR/lz4tyIwj" +
+            "13gF1/MgFOynllrzgxw+lNTH0Pl/nfidCKlBF8zvc2QhHViE1a5jAkAir3sCzwLh" +
+            "pkPx3hfxL7RUQOti8MY9jOjurHZ48z4p0DUX/R5bATGe9KxmG9zHtHOBKRFAxs6w" +
+            "OLGaqzvPFdyq";
+    private static final String CHARSET = "UTF-8";
+    private static final String ALIPAY_PUBLIC_KEY = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDDI6d306Q8fIfCOaTXyiUeJHkrIvYISRcc73s3vF1ZT7XN8RNPwJxo8pWaJMmvyTn9N4HQ632qJBVHf8sxHi/fEsraprwCtzvzQETrNRwVxLO5jVmRGi60j8Ue1efIlzPXV9je9mkjzOmdssymZkh2QhUrCmZYI/FCEa3/cNMW0QIDAQAB";
+    
+    public static String getParameters(String outtradeno, double amt, String notifyUrl) {
+    	String body = "";
+    	AlipayClient alipayClient = new DefaultAlipayClient("https://openapi.alipay.com/gateway.do", APPID, APP_PRIVATE_KEY, "json", CHARSET, ALIPAY_PUBLIC_KEY, "RSA");
+    	//实例化具体API对应的request类,类名称和接口名称对应,当前调用接口名称：alipay.trade.app.pay
+    	AlipayTradeAppPayRequest request = new AlipayTradeAppPayRequest();
+    	//SDK已经封装掉了公共参数，这里只需要传入业务参数。以下方法为sdk的model入参方式(model和biz_content同时存在的情况下取biz_content)。
+    	AlipayTradeAppPayModel model = new AlipayTradeAppPayModel();
+    	model.setBody("商城订单");
+    	model.setSubject("商城订单");
+    	model.setOutTradeNo(outtradeno);
+    	model.setTimeoutExpress("30m");
+    	model.setTotalAmount(amt + "");
+    	model.setProductCode(outtradeno);
+    
+    	request.setBizModel(model);
+    	request.setNotifyUrl(notifyUrl);
+    
+    	try {
+    	        //这里和普通的接口调用不同，使用的是sdkExecute
+    	        AlipayTradeAppPayResponse response = alipayClient.sdkExecute(request);
+    	        body = response.getBody();//就是orderString 可以直接给客户端请求，无需再做处理。
+    	} catch (AlipayApiException e) {
+    	        e.printStackTrace();
+    	}
+		return body;
+    
+    }
+
+}

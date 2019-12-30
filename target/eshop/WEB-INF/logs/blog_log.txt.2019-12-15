@@ -1,0 +1,121 @@
+2019-12-15 17:05:11,771 [http-nio-8765-exec-9] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/get4
+2019-12-15 17:05:37,079 [http-nio-8765-exec-2] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/get6
+2019-12-15 17:26:16,191 [http-nio-8765-exec-7] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/get7
+2019-12-15 17:30:52,267 [http-nio-8765-exec-9] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/get8
+2019-12-15 17:38:08,398 [http-nio-8765-exec-8] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/get9
+2019-12-15 17:43:28,382 [http-nio-8765-exec-2] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/test1
+2019-12-15 17:43:59,466 [http-nio-8765-exec-5] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/test1
+2019-12-15 17:44:16,421 [http-nio-8765-exec-6] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/test1
+2019-12-15 18:56:01,623 [http-nio-8765-exec-3] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [35d78096-6d59-465d-91ce-551131a7a4af], using default.
+2019-12-15 18:56:12,872 [http-nio-8765-exec-10] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [083cb27f-41d4-4c4a-b512-3f1b9d751688], using default.
+2019-12-15 18:56:31,114 [http-nio-8765-exec-8] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [9fa90e0d-daed-4fa6-8504-6adcbf42d27a], using default.
+2019-12-15 18:57:40,307 [http-nio-8765-exec-10] [com.jfinal.core.ActionHandler] [ERROR] - /pc/test/test
+java.lang.RuntimeException: java.lang.reflect.InvocationTargetException
+	at com.jfinal.aop.Invocation.invoke(Invocation.java:87)
+	at com.eshop.interceptor.RequestInterceptor.intercept(RequestInterceptor.java:51)
+	at com.jfinal.aop.Invocation.invoke(Invocation.java:67)
+	at com.jfinal.core.ActionHandler.handle(ActionHandler.java:74)
+	at com.jfinal.core.JFinalFilter.doFilter(JFinalFilter.java:72)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)
+	at com.thetransactioncompany.cors.CORSFilter.doFilter(CORSFilter.java:209)
+	at com.thetransactioncompany.cors.CORSFilter.doFilter(CORSFilter.java:244)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:199)
+	at org.apache.catalina.core.StandardContextValve.__invoke(StandardContextValve.java:96)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:490)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:139)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:92)
+	at org.apache.catalina.valves.AbstractAccessLogValve.invoke(AbstractAccessLogValve.java:668)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:343)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:408)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:66)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:770)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1415)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:49)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.lang.Thread.run(Thread.java:748)
+Caused by: java.lang.reflect.InvocationTargetException
+	at com.zeroturnaround.jrebelbase.facade.r.throwWrappedNoSuchMethodError(SourceFile:170)
+	at com.zeroturnaround.jrebelbase.facade.r.checkMethodRemoved(SourceFile:192)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at com.jfinal.aop.Invocation.invoke(Invocation.java:73)
+	... 28 more
+Caused by: java.lang.NoSuchMethodError: com.eshop.controller.pc.TestController.test()V
+	... 32 more
+2019-12-15 18:57:44,025 [http-nio-8765-exec-1] [com.jfinal.core.ActionHandler] [ERROR] - /pc/test/test
+java.lang.RuntimeException: java.lang.reflect.InvocationTargetException
+	at com.jfinal.aop.Invocation.invoke(Invocation.java:87)
+	at com.eshop.interceptor.RequestInterceptor.intercept(RequestInterceptor.java:51)
+	at com.jfinal.aop.Invocation.invoke(Invocation.java:67)
+	at com.jfinal.core.ActionHandler.handle(ActionHandler.java:74)
+	at com.jfinal.core.JFinalFilter.doFilter(JFinalFilter.java:72)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)
+	at com.thetransactioncompany.cors.CORSFilter.doFilter(CORSFilter.java:209)
+	at com.thetransactioncompany.cors.CORSFilter.doFilter(CORSFilter.java:244)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:199)
+	at org.apache.catalina.core.StandardContextValve.__invoke(StandardContextValve.java:96)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:490)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:139)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:92)
+	at org.apache.catalina.valves.AbstractAccessLogValve.invoke(AbstractAccessLogValve.java:668)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:343)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:408)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:66)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:770)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1415)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:49)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.lang.Thread.run(Thread.java:748)
+Caused by: java.lang.reflect.InvocationTargetException
+	at com.zeroturnaround.jrebelbase.facade.r.throwWrappedNoSuchMethodError(SourceFile:170)
+	at com.zeroturnaround.jrebelbase.facade.r.checkMethodRemoved(SourceFile:192)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at com.jfinal.aop.Invocation.invoke(Invocation.java:73)
+	... 28 more
+Caused by: java.lang.NoSuchMethodError: com.eshop.controller.pc.TestController.test()V
+	... 32 more
+2019-12-15 18:58:05,187 [http-nio-8765-exec-2] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/test2
+2019-12-15 18:59:05,170 [http-nio-8765-exec-1] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/test2
+2019-12-15 18:59:51,941 [http-nio-8765-exec-6] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [97a91a6b-86e2-4e55-8cd9-bf2d3f02b015], using default.
+2019-12-15 19:09:39,057 [http-nio-8765-exec-5] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [c5d9db91-a317-470e-aead-06c308b76a69], using default.
+2019-12-15 19:09:53,145 [http-nio-8765-exec-8] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [d9902ee8-af74-4a8b-b473-a42b21fcb6dc], using default.
+2019-12-15 19:10:47,556 [http-nio-8765-exec-6] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [0ad15f6c-190b-4c8e-b8d4-81f2ec2313fb], using default.
+2019-12-15 19:10:55,372 [http-nio-8765-exec-4] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [b7f286f3-6281-4066-a158-a7ebbac2c844], using default.
+2019-12-15 19:11:24,270 [http-nio-8765-exec-2] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [2fca6b01-ae8e-4c96-8cb9-8ece97b13f23], using default.
+2019-12-15 19:11:28,385 [http-nio-8765-exec-7] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [912c3c7a-0c7d-465f-a537-91ed1054484c], using default.
+2019-12-15 19:11:30,492 [http-nio-8765-exec-8] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [955981e9-3868-4aa7-950d-ff41970c1d43], using default.
+2019-12-15 19:11:40,298 [http-nio-8765-exec-7] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [ee735928-bf42-4867-b151-aa90d8ba9e82], using default.
+2019-12-15 19:12:09,583 [http-nio-8765-exec-2] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [fc0872eb-2528-41ba-a63a-0996ba1b3303], using default.
+2019-12-15 19:12:13,031 [http-nio-8765-exec-9] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [cc353ed7-1ca1-4cfe-8f94-9c7f69715467], using default.
+2019-12-15 19:12:14,667 [http-nio-8765-exec-10] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [d8ef8f19-08a7-4f3d-9d2e-9bc296218f78], using default.
+2019-12-15 19:16:03,812 [http-nio-8765-exec-3] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [21a4e7a5-bf11-420e-b4e7-eb17111b95f8], using default.
+2019-12-15 19:16:07,391 [http-nio-8765-exec-2] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [12c33c66-9144-41c1-9f2c-dd48413f82ea], using default.
+2019-12-15 19:16:38,894 [http-nio-8765-exec-4] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [3c7a8cdb-2fe2-4e9b-a462-1f799af22696], using default.
+2019-12-15 19:17:36,028 [http-nio-8765-exec-3] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [67049352-f0a3-40a6-85d2-4182e80b19fd], using default.
+2019-12-15 19:21:01,006 [http-nio-8765-exec-4] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [303b91d7-8106-4310-87ac-b0373518981f], using default.
+2019-12-15 19:21:04,352 [http-nio-8765-exec-6] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [8f14d2cb-9f4b-4b64-b2ac-9910d0463295], using default.
+2019-12-15 19:34:31,552 [http-nio-8765-exec-6] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [60b92974-1c3f-49cf-bb2d-a67582aa035e], using default.
+2019-12-15 19:34:43,121 [http-nio-8765-exec-4] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [329f2301-3beb-4d30-87b4-356c64fe7f5c], using default.
+2019-12-15 19:43:39,225 [http-nio-8765-exec-3] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/test4
+2019-12-15 19:43:53,010 [http-nio-8765-exec-4] [com.jfinal.core.ActionHandler] [WARN] - 404 Action Not Found: /pc/test/test4
+2019-12-15 19:44:02,890 [http-nio-8765-exec-10] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [84c204f0-79c2-47c1-8f4d-e136c8efa5d9], using default.
+2019-12-15 19:44:07,030 [http-nio-8765-exec-10] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [8223], using default.
+2019-12-15 19:44:12,987 [http-nio-8765-exec-10] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [12552d35-2aed-4de7-a053-c88961df886f], using default.
+2019-12-15 19:44:56,770 [http-nio-8765-exec-7] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [6cd2981a-11e4-43e9-8469-75f77d47d9ce], using default.
+2019-12-15 19:48:24,002 [http-nio-8765-exec-3] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [2bea0521-de26-44ef-a371-3f4f15a4fdeb], using default.
+2019-12-15 20:05:09,845 [http-nio-8765-exec-4] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [593e5ebf-0a00-4743-8f45-d085b26d95de], using default.
+2019-12-15 20:05:24,583 [http-nio-8765-exec-2] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [5eb35b74-5d41-4c7d-acf5-21f0ed21bdc0], using default.
+2019-12-15 20:05:36,233 [http-nio-8765-exec-7] [com.jfinal.plugin.ehcache.CacheKit] [WARN] - Could not find cache config [c85f4007-4f08-473c-9592-e4f5e9241d3b], using default.

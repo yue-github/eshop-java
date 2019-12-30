@@ -1,0 +1,135 @@
+package com.eshop.controller.webapp;
+
+import java.util.*;
+
+import com.eshop.content.ResourceService;
+import com.eshop.helper.CacheHelper;
+import com.eshop.interceptor.CustomerPcAuthInterceptor;
+import com.eshop.interceptor.CustomerWebAppAuthInterceptor;
+import com.eshop.model.Customer;
+import com.eshop.model.Order;
+import com.eshop.model.Product;
+import com.eshop.model.ProductOrder;
+import com.eshop.service.Merchant;
+import com.eshop.service.User;
+import com.jfinal.aop.Before;
+import com.jfinal.plugin.activerecord.Record;
+
+/**
+ *   退货退款列表控制器
+ *   @author TangYiFeng
+ */
+public class BacksController extends WebappBaseController {
+
+    /**
+     * 我的退货
+     * @param token 帐户访问口令（必填）
+     * @param offset（必填）
+     * @param length（必填）
+     * @return 成功：{error: 0, data: [{id:退货记录id,productId:产品id, orderTime 订单时间, orderCode:订单号,ProductName: 产品名称, summary: 摘要说明, actualUnitPrice: 价格, mainPic: 图片, isGeted 是否已收到货, refundAmount 退货数量, tradeCash交易金额, refundCash退款金额, reason 退款原因， status:状态}, ...]}；失败：{error: >0, errmsg: 错误信息}
+     */
+    @Before(CustomerWebAppAuthInterceptor.class)
+    public void getBacks() {
+    	String[] params = {"length"};
+    	if (!this.validate(params)) {
+    		return;
+    	}
+    	
+    	Integer offset = getParaToInt("offset");
+    	if(offset == null) {
+    		offset = 0;
+    	}
+    	int length = getParaToInt("length");
+    	
+    	String token = getPara("token");
+    	Customer customer = (Customer)CacheHelper.get(token);
+    	int customerId = customer.getId();
+    	
+    	Map<String, String> orderByMap = new HashMap<String, String>();
+    	orderByMap.put("a.created_at", "desc");
+    	
+    	List<Record> data = User.findReturnedItems(offset, length, customerId, null, null, null, 
+    			null, null, null, null, null, null, null, orderByMap);
+    	
+    	int totalRow = User.countReturnedItems(customerId, null, null, null, null, null, null, 
+    			null, null, null, null);
+    	
+    	jsonObject.put("data", data);
+    	jsonObject.put("offset", offset);
+    	jsonObject.put("length", length);
+    	jsonObject.put("totalRow", totalRow);
+    	renderJson(jsonObject);
+    }
+    
+    /**
+     * 我的退款
+     * @param token 帐户访问口令（必填）
+     * @param offset（必填）
+     * @param length（必填）
+     * @return 成功：{error: 0, data: [{id: 主键, orderTime 订单时间, orderCode:订单号, productId: 产品id, ProductName: 产品名称, summary: 摘要说明, actualUnitPrice: 价格, mainPic: 图片, refundAmount 退货数量, tradeCash交易金额, refundCash退款金额, reason 退款原因， status:状态}, ...]}；失败：{error: >0, errmsg: 错误信息}
+     */
+    @Before(CustomerWebAppAuthInterceptor.class)
+    public void getRefunds() {
+    	String[] params = {"length"};
+    	if (!this.validate(params)) {
+    		return;
+    	}
+    	
+    	Integer offset = getParaToInt("offset");
+    	if(offset == null) {
+    		offset = 0;
+    	}
+    	int length = getParaToInt("length");
+    	
+    	String token = getPara("token");
+    	Customer customer = (Customer)CacheHelper.get(token);
+    	int customerId = customer.getId();
+    	
+    	Map<String, String> orderByMap = new HashMap<String, String>();
+    	orderByMap.put("a.created_at", "desc");
+    	
+    	List<Record> data = User.findRefundItems(offset, length, customerId, null, null, null, null, 
+    			null, null, null, orderByMap);
+    	
+    	int totalRow = User.countRefundItems(customerId, null, null, null, null, null, null, null);
+    	
+    	jsonObject.put("data", data);
+    	jsonObject.put("offset", offset);
+    	jsonObject.put("length", length);
+    	jsonObject.put("totalRow", totalRow);
+    	renderJson(jsonObject);
+    }
+
+    /**
+     * 获取退货商品
+     *  @param token 帐户访问口令（必填）
+     *  @param productOrderId 产品订单id（必填）
+     *  @return 成功：{error: 0, productOrder: {id:id, product_name:产品名称, mainPic:产品主图, actualUnitPrice:价格, unitOrdered:数量, totalActualProductPrice:总价, shopName:店铺名称}}；失败：{error: >0, errmsg: 错误信息}
+     */
+    @Before(CustomerWebAppAuthInterceptor.class)
+    public void getProductOrder() {
+    	String[] params = {"productOrderId"};
+    	if (!this.validate(params)) {
+    		return;
+    	}
+    	
+        int productOrderId = getParaToInt("productOrderId");  
+        ProductOrder productOrder = User.getProductOrder(productOrderId);
+        
+        if (productOrder == null) {
+        	returnError(ErrorCode.Exception, "该产品订单不存在");
+        	return;
+        }
+        
+        productOrder.put("allowApplyCash", productOrder.getTotalActualProductPrice());
+        
+        Order order = User.getOrder(productOrder.getOrderId());
+        productOrder.put("orderStatus", order.getStatus());
+        Product product = Merchant.getProduct(productOrder.getProductId());
+        String mainPic = product != null ? ResourceService.getPath(product.getMainPic()) : "";
+        productOrder.put("mainPic", mainPic);
+        
+        jsonObject.put("productOrder", productOrder);
+        renderJson(jsonObject);
+    }
+}
